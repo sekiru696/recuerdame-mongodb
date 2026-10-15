@@ -77,3 +77,24 @@ Si el cuidador envía `horarios: []` o una hora como `25:99`, la aplicación y l
 
 **Caso 2: el cuidador edita un recordatorio que ya tiene historial.**
 Los registros anteriores conservan la copia original de `tipo` y `mensaje`. Así el historial muestra lo que realmente se le dijo al paciente en ese momento, aunque el recordatorio haya cambiado después.
+
+
+## Semana 3
+**Fecha:** 15-10-2026
+
+**Decisiones:**
+- Modelo versión 2 documentado en `docs/semana3/modelo-v2.md`, con diccionario de campos y reglas de validación.
+- Conexión a MongoDB Atlas (plan gratuito, región São Paulo) con la cadena de conexión guardada en `.env`, fuera del repositorio.
+- Contraseñas de usuarios guardadas cifradas con bcrypt.
+- Validación de documentos en la base de datos (`$jsonSchema`) e índice único sobre `usuarios.correo`.
+
+**Problemas:**
+- Error de DNS (`querySrv ECONNREFUSED`) al conectar. Se resolvió forzando los servidores DNS de Google desde `src/db.js`.
+- Conflicto de credenciales de GitHub entre varias cuentas en el mismo computador. Se resolvió autenticando este repositorio con su cuenta propietaria.
+
+**Evidencia:** carpeta `docs/semana3/evidencia/` (capturas de Atlas y de los casos límite).
+
+**Tareas para la semana 4:**
+- Completar las operaciones básicas del primer flujo de negocio (crear, listar, editar y desactivar recordatorios).
+- Construir una interfaz mínima utilizable.
+- Preparar la demostración de 10 a 12 minutos y el plan para las semanas 5 a 8.
