@@ -1,0 +1,28 @@
+{
+  "name": "recuerdame-mongodb",
+  "version": "1.0.0",
+  "description": "Recordatorios por voz para personas con alzhéimer. Proyecto integrador con MongoDB",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sekiru696/recuerdame-mongodb.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/sekiru696/recuerdame-mongodb/issues"
+  },
+  "homepage": "https://github.com/sekiru696/recuerdame-mongodb#readme",
+  "dependencies": {
+    "dotenv": "^18.0.8",
+    "mongodb": "^7.7.0"
+  }
+}
