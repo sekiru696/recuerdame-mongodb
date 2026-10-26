@@ -75,29 +75,16 @@
     border-radius: 10px;
   }
 
-  /* Franja del día */
-  .franja {
-    position: relative;
-    height: 18px;
-    border-radius: 9px;
-    background: linear-gradient(90deg, #4a2f3d 0%, #d99a6c 28%, #e6bf7e 50%, #cf7d6f 76%, #4a2f3d 100%);
-  }
-  .punto {
-    position: absolute;
-    top: 50%;
-    width: 22px;
-    height: 22px;
-    margin: -11px 0 0 -11px;
-    border-radius: 50%;
-    background: #fffaf5;
-    border: 4px solid var(--ink);
-  }
-  .escala {
-    display: flex;
-    justify-content: space-between;
-    margin-top: .45rem;
-    font-size: .9rem;
-    color: var(--ink-soft);
+  /* Reloj con la hora exacta */
+  .reloj { margin-top: 1.6rem; }
+  .reloj-hora {
+    display: block;
+    font-size: clamp(3.2rem, 11vw, 6rem);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: .02em;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
   }
 
   /* Pantalla de acceso */
@@ -135,7 +122,6 @@
   .encabezado h2 { font-size: clamp(2rem, 5vw, 2.9rem); line-height: 1.1; }
   .selector { min-width: 14rem; }
   .selector label { margin-top: 0; font-size: .95rem; }
-  .dia { margin-top: 2rem; }
 
   main { max-width: 900px; margin: 0 auto; padding: 1rem clamp(1rem, 4vw, 2rem) 4rem; }
 
@@ -296,9 +282,8 @@
         </div>
       </div>
 
-      <div class="dia">
-        <div class="franja" id="franja" role="img" aria-label="Línea del día con la hora de cada recordatorio"></div>
-        <div class="escala" aria-hidden="true"><span>0:00</span><span>6:00</span><span>12:00</span><span>18:00</span><span>24:00</span></div>
+      <div class="reloj" role="timer" aria-label="Hora actual">
+        <span class="reloj-hora" id="reloj">--:--:--</span>
       </div>
     </div>
   </div>
@@ -429,21 +414,18 @@ function hablar(texto) {
   window.speechSynthesis.speak(voz);
 }
 
-/* ---------- Franja del día ---------- */
-function pintarFranja(lista) {
-  const franja = $('franja');
-  franja.textContent = '';
-  for (const r of lista) {
-    for (const hora of r.horarios) {
-      const [h, m] = hora.split(':').map(Number);
-      const punto = document.createElement('span');
-      punto.className = 'punto';
-      punto.style.left = ((h * 60 + m) / 1440 * 100) + '%';
-      punto.title = hora + ' ' + r.mensaje;
-      franja.append(punto);
-    }
-  }
+/* ---------- Reloj ---------- */
+function actualizarReloj() {
+  const ahora = new Date();
+  const dos = n => String(n).padStart(2, '0');
+  $('reloj').textContent = dos(ahora.getHours()) + ':' + dos(ahora.getMinutes()) + ':' + dos(ahora.getSeconds());
 }
+
+function ticReloj() {
+  actualizarReloj();
+  setTimeout(ticReloj, 1000 - (Date.now() % 1000));
+}
+ticReloj();
 
 /* ---------- Lista ---------- */
 function crearFila(r) {
@@ -521,7 +503,6 @@ async function cargarLista() {
   lista.textContent = '';
   if (!pacienteId) {
     $('contador').textContent = 'Recordatorios activos';
-    pintarFranja([]);
     const v = document.createElement('p');
     v.className = 'vacio';
     v.textContent = 'No tienes pacientes a tu cargo todavía.';
@@ -535,7 +516,6 @@ async function cargarLista() {
   try {
     const datos = await api(ruta);
     datos.sort((a, b) => [...a.horarios].sort()[0].localeCompare([...b.horarios].sort()[0]));
-    pintarFranja(datos);
     $('contador').textContent = datos.length === 1 ? '1 recordatorio activo' : datos.length + ' recordatorios activos';
 
     if (datos.length === 0) {
