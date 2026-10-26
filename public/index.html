@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recuérdame</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Young+Serif&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #3a2a24;
+    --ink-soft: #6b564c;
+    --paper: #f3e6dc;
+    --surface: #fcf6f0;
+    --line: #e0cdbf;
+    --borde-campo: #9b8070;
+    --brand: #8c3b48;
+    --brand-dark: #742f3b;
+    --danger: #9b2c2c;
+    --ok: #4d5a2e;
+    --hora-manana: #efd9a6;
+    --hora-tarde: #efc3b0;
+    --hora-noche: #d3b8c0;
+    --titulos: "Young Serif", Georgia, serif;
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+
+  body {
+    margin: 0;
+    font-family: "Atkinson Hyperlegible", system-ui, "Segoe UI", sans-serif;
+    font-size: 1.125rem;
+    line-height: 1.5;
+    color: var(--ink);
+    background: var(--paper);
+  }
+
+  :focus-visible { outline: 3px solid #2b1d18; outline-offset: 3px; }
+
+  h1, h2, h3, p { margin: 0; }
+  h1, h2 { font-family: var(--titulos); font-weight: 400; }
+
+  /* Botones */
+  .btn {
+    min-height: 46px;
+    padding: 0 1.2rem;
+    border-radius: 10px;
+    border: 1.5px solid transparent;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color .15s;
+  }
+  .btn-primario { background: var(--brand); color: #fff; }
+  .btn-primario:hover { background: var(--brand-dark); }
+  .btn-secundario { background: var(--surface); color: var(--ink); border-color: var(--borde-campo); }
+  .btn-secundario:hover { background: #f1e2d6; }
+  .btn-peligro { background: var(--surface); color: var(--danger); border-color: var(--danger); }
+  .btn-peligro:hover { background: #f6e0dc; }
+
+  /* Campos */
+  label { display: block; margin-top: 1.1rem; font-weight: 700; }
+  .ayuda { display: block; font-weight: 400; color: var(--ink-soft); font-size: .95rem; }
+  input, select {
+    width: 100%;
+    min-height: 48px;
+    margin-top: .3rem;
+    padding: .5rem .8rem;
+    font: inherit;
+    color: var(--ink);
+    background: #fffdfb;
+    border: 1.5px solid var(--borde-campo);
+    border-radius: 10px;
+  }
+
+  /* Franja del día */
+  .franja {
+    position: relative;
+    height: 18px;
+    border-radius: 9px;
+    background: linear-gradient(90deg, #4a2f3d 0%, #d99a6c 28%, #e6bf7e 50%, #cf7d6f 76%, #4a2f3d 100%);
+  }
+  .punto {
+    position: absolute;
+    top: 50%;
+    width: 22px;
+    height: 22px;
+    margin: -11px 0 0 -11px;
+    border-radius: 50%;
+    background: #fffaf5;
+    border: 4px solid var(--ink);
+  }
+  .escala {
+    display: flex;
+    justify-content: space-between;
+    margin-top: .45rem;
+    font-size: .9rem;
+    color: var(--ink-soft);
+  }
+
+  /* Pantalla de acceso */
+  .acceso { min-height: 100vh; display: grid; grid-template-columns: 1.15fr 1fr; }
+  .marca {
+    position: relative;
+    overflow: hidden;
+    padding: 3rem;
+    color: #fffaf5;
+    background: linear-gradient(180deg, #5a3344 0%, #b9686a 55%, #e3a77f 100%);
+  }
+  .marca h1 { position: relative; z-index: 1; font-size: clamp(2.6rem, 5vw, 4rem); line-height: 1.05; }
+  .marca svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .acceso-form { display: grid; place-items: center; padding: 2rem; }
+  .acceso-form form { width: min(390px, 100%); }
+  .acceso-form h2 { font-size: 2rem; }
+  .acceso-form .btn { margin-top: 1.5rem; width: 100%; }
+  .error-login { margin-top: 1rem; min-height: 1.5rem; color: var(--danger); font-weight: 700; }
+
+  /* Panel del cuidador */
+  .portada { background: linear-gradient(180deg, #ebc7aa 0%, var(--paper) 100%); padding-bottom: 1.5rem; }
+  .cabecera {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem clamp(1rem, 4vw, 2.5rem);
+  }
+  .cabecera strong { font-family: var(--titulos); font-weight: 400; font-size: 1.6rem; }
+  .sesion { display: flex; align-items: center; gap: .8rem; color: var(--ink); }
+  .sesion .btn { min-height: 42px; }
+
+  .portada-contenido { max-width: 900px; margin: 0 auto; padding: 1.2rem clamp(1rem, 4vw, 2rem) 0; }
+  .encabezado { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 1.2rem; }
+  .encabezado h2 { font-size: clamp(2rem, 5vw, 2.9rem); line-height: 1.1; }
+  .selector { min-width: 14rem; }
+  .selector label { margin-top: 0; font-size: .95rem; }
+  .dia { margin-top: 2rem; }
+
+  main { max-width: 900px; margin: 0 auto; padding: 1rem clamp(1rem, 4vw, 2rem) 4rem; }
+
+  .barra-lista { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; }
+  .barra-lista h3 { font-size: 1.3rem; }
+  .filtros { display: flex; flex-wrap: wrap; gap: .4rem; }
+  .filtro {
+    min-height: 42px;
+    padding: 0 1rem;
+    border-radius: 999px;
+    border: 1.5px solid var(--borde-campo);
+    background: var(--surface);
+    color: var(--ink);
+    font: inherit;
+    cursor: pointer;
+  }
+  .filtro[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: #fffaf5; font-weight: 700; }
+
+  .lista {
+    margin-top: 1.2rem;
+    overflow: hidden;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+  }
+  .fila {
+    display: grid;
+    grid-template-columns: 8rem 1fr auto;
+    gap: 1.4rem;
+    padding: 1.4rem 1.5rem;
+    border-top: 1px solid var(--line);
+  }
+  .fila:first-child { border-top: 0; }
+  .horas { display: flex; flex-direction: column; align-items: flex-start; gap: .4rem; }
+  .hora {
+    padding: .1rem .8rem;
+    border-radius: 10px;
+    font-size: 1.45rem;
+    font-weight: 700;
+    line-height: 1.4;
+    font-variant-numeric: tabular-nums;
+  }
+  .hora.manana { background: var(--hora-manana); }
+  .hora.tarde { background: var(--hora-tarde); }
+  .hora.noche { background: var(--hora-noche); }
+
+  .meta { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem 1.1rem; color: var(--ink-soft); font-size: .98rem; }
+  .meta span { display: inline-flex; align-items: center; gap: .4rem; }
+  .mensaje { margin: .25rem 0; font-size: 1.25rem; font-weight: 700; }
+  .detalle { color: var(--ink-soft); font-size: 1rem; }
+  .detalle span { margin-right: 1.1rem; }
+  .acciones { display: flex; flex-wrap: wrap; align-items: flex-start; gap: .5rem; }
+  .acciones .btn { min-height: 42px; }
+  .vacio { padding: 2.2rem 1.5rem; color: var(--ink-soft); }
+
+  /* Ventana de formulario */
+  dialog {
+    width: min(580px, calc(100% - 2rem));
+    max-height: calc(100% - 2rem);
+    padding: 0;
+    border: 0;
+    border-radius: 18px;
+    color: var(--ink);
+    background: var(--surface);
+    box-shadow: 0 20px 60px rgba(58, 42, 36, .4);
+  }
+  dialog::backdrop { background: rgba(58, 42, 36, .55); }
+  dialog[open] { animation: entra .18s ease-out; }
+  @keyframes entra { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  dialog form { padding: 1.7rem; }
+  dialog h2 { font-size: 1.7rem; }
+  .pie-form { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1.6rem; }
+  .error-form { margin-top: 1rem; min-height: 1.5rem; color: var(--danger); font-weight: 700; }
+
+  /* Aviso de resultado */
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 1.5rem;
+    z-index: 10;
+    max-width: calc(100% - 2rem);
+    padding: .85rem 1.3rem;
+    border-radius: 12px;
+    background: var(--ok);
+    color: #fffaf5;
+    font-weight: 700;
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, 16px);
+    transition: opacity .2s, transform .2s;
+  }
+  .toast.visible { opacity: 1; transform: translate(-50%, 0); }
+  .toast.error { background: var(--danger); }
+
+  @media (max-width: 760px) {
+    .acceso { grid-template-columns: 1fr; }
+    .marca { min-height: 240px; padding: 2rem 1.5rem; }
+    .fila { grid-template-columns: 1fr; gap: .8rem; padding: 1.2rem; }
+    .horas { flex-direction: row; flex-wrap: wrap; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Acceso -->
+<div class="acceso" id="acceso">
+  <section class="marca">
+    <h1>Recuérdame</h1>
+    <svg viewBox="0 0 800 600" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+      <defs>
+        <radialGradient id="brillo" cx="50%" cy="50%" r="50%">
+          <stop offset="0" stop-color="#f3d7a6" stop-opacity=".85"/>
+          <stop offset="1" stop-color="#f3d7a6" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <circle cx="520" cy="360" r="240" fill="url(#brillo)"/>
+      <circle cx="520" cy="360" r="78" fill="#f0cf9a"/>
+      <path d="M0 430 C150 380 260 400 400 440 S650 470 800 410 V600 H0Z" fill="#a85a5e"/>
+      <path d="M0 490 C140 450 300 480 430 510 S680 520 800 480 V600 H0Z" fill="#7d4150"/>
+      <path d="M0 550 C180 520 330 545 480 560 S700 570 800 545 V600 H0Z" fill="#4f2c3b"/>
+    </svg>
+  </section>
+
+  <section class="acceso-form">
+    <form id="formLogin" novalidate>
+      <h2>Iniciar sesión</h2>
+      <label for="correo">Correo</label>
+      <input id="correo" type="email" required autocomplete="username">
+      <label for="password">Contraseña</label>
+      <input id="password" type="password" required autocomplete="current-password">
+      <p class="error-login" id="errorLogin" role="alert"></p>
+      <button class="btn btn-primario" type="submit">Entrar</button>
+    </form>
+  </section>
+</div>
+
+<!-- Panel -->
+<div id="app" hidden>
+  <div class="portada">
+    <header class="cabecera">
+      <strong>Recuérdame</strong>
+      <div class="sesion">
+        <span id="quien"></span>
+        <button class="btn btn-secundario" id="salir" type="button">Salir</button>
+      </div>
+    </header>
+
+    <div class="portada-contenido">
+      <div class="encabezado">
+        <h2 id="tituloPaciente">Día del paciente</h2>
+        <div class="selector">
+          <label for="paciente">Paciente</label>
+          <select id="paciente"></select>
+        </div>
+      </div>
+
+      <div class="dia">
+        <div class="franja" id="franja" role="img" aria-label="Línea del día con la hora de cada recordatorio"></div>
+        <div class="escala" aria-hidden="true"><span>0:00</span><span>6:00</span><span>12:00</span><span>18:00</span><span>24:00</span></div>
+      </div>
+    </div>
+  </div>
+
+  <main>
+    <div class="barra-lista">
+      <h3 id="contador">Recordatorios activos</h3>
+      <div class="filtros" id="filtros">
+        <button class="filtro" type="button" data-tipo="" aria-pressed="true">Todos</button>
+        <button class="filtro" type="button" data-tipo="medicamento" aria-pressed="false">Medicamentos</button>
+        <button class="filtro" type="button" data-tipo="cita" aria-pressed="false">Citas</button>
+        <button class="filtro" type="button" data-tipo="fecha_especial" aria-pressed="false">Fechas especiales</button>
+      </div>
+      <button class="btn btn-primario" id="nuevo" type="button">Nuevo recordatorio</button>
+    </div>
+
+    <div class="lista" id="lista"></div>
+  </main>
+</div>
+
+<!-- Formulario -->
+<dialog id="dlg" aria-labelledby="tituloForm">
+  <form id="formRecordatorio" novalidate>
+    <h2 id="tituloForm">Nuevo recordatorio</h2>
+
+    <label for="tipo">Tipo</label>
+    <select id="tipo">
+      <option value="medicamento">Medicamento</option>
+      <option value="cita">Cita</option>
+      <option value="fecha_especial">Fecha especial</option>
+    </select>
+
+    <label for="mensaje">Mensaje que se dirá en voz alta
+      <span class="ayuda">Usa frases cortas y claras. Mínimo 5 caracteres.</span>
+    </label>
+    <input id="mensaje" required minlength="5">
+
+    <label for="horarios">Horarios
+      <span class="ayuda">Formato HH:MM, separados por coma. Ejemplo: 08:00, 20:00</span>
+    </label>
+    <input id="horarios" required autocomplete="off">
+
+    <label for="repeticion">Repetición</label>
+    <select id="repeticion">
+      <option value="unica">Una vez</option>
+      <option value="diaria">Todos los días</option>
+      <option value="semanal">Cada semana</option>
+    </select>
+
+    <div id="camposDetalle"></div>
+
+    <p class="error-form" id="errorForm" role="alert"></p>
+
+    <div class="pie-form">
+      <button class="btn btn-primario" type="submit" id="guardar">Crear recordatorio</button>
+      <button class="btn btn-secundario" type="button" id="escuchar">Escuchar mensaje</button>
+      <button class="btn btn-secundario" type="button" id="cancelar">Cancelar</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+const ETIQUETA_TIPO = { medicamento: 'Medicamento', cita: 'Cita', fecha_especial: 'Fecha especial' };
+const ETIQUETA_REPETICION = { unica: 'Una vez', diaria: 'Todos los días', semanal: 'Cada semana' };
+const ETIQUETA_DETALLE = { nombre: 'Medicamento', dosis: 'Dosis', lugar: 'Lugar', profesional: 'Profesional', persona: 'Motivo' };
+const CAMPOS_DETALLE = {
+  medicamento: [['nombre', 'Medicamento'], ['dosis', 'Dosis']],
+  cita: [['lugar', 'Lugar'], ['profesional', 'Profesional']],
+  fecha_especial: [['persona', 'Persona o motivo']]
+};
+
+// Íconos fijos (no contienen datos del usuario)
+const ICONOS = {
+  medicamento: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="8" width="18" height="8" rx="4" transform="rotate(-45 12 12)"/><path d="M9.2 9.2l5.6 5.6"/></svg>',
+  cita: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+  fecha_especial: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg>'
+};
+
+let token = null;
+let filtroTipo = '';
+let editandoId = null;
+let temporizador = null;
+
+function parteDelDia(hora) {
+  const h = Number(hora.slice(0, 2));
+  if (h < 12) return { clase: 'manana', nombre: 'Mañana' };
+  if (h < 19) return { clase: 'tarde', nombre: 'Tarde' };
+  return { clase: 'noche', nombre: 'Noche' };
+}
+
+function aviso(texto, esError) {
+  const el = $('toast');
+  el.textContent = texto;
+  el.classList.toggle('error', Boolean(esError));
+  el.classList.add('visible');
+  clearTimeout(temporizador);
+  temporizador = setTimeout(() => el.classList.remove('visible'), 3500);
+}
+
+async function api(ruta, opciones = {}) {
+  const res = await fetch('/api' + ruta, {
+    ...opciones,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: 'Bearer ' + token } : {})
+    }
+  });
+  const datos = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(datos.error || 'Ocurrió un error inesperado');
+  return datos;
+}
+
+function hablar(texto) {
+  if (!('speechSynthesis' in window)) {
+    aviso('Este navegador no puede reproducir voz', true);
+    return;
+  }
+  window.speechSynthesis.cancel();
+  const voz = new SpeechSynthesisUtterance(texto);
+  voz.lang = 'es-CL';
+  voz.rate = 0.9;
+  const espanol = window.speechSynthesis.getVoices().find(v => v.lang.toLowerCase().startsWith('es'));
+  if (espanol) voz.voice = espanol;
+  window.speechSynthesis.speak(voz);
+}
+
+/* ---------- Franja del día ---------- */
+function pintarFranja(lista) {
+  const franja = $('franja');
+  franja.textContent = '';
+  for (const r of lista) {
+    for (const hora of r.horarios) {
+      const [h, m] = hora.split(':').map(Number);
+      const punto = document.createElement('span');
+      punto.className = 'punto';
+      punto.style.left = ((h * 60 + m) / 1440 * 100) + '%';
+      punto.title = hora + ' ' + r.mensaje;
+      franja.append(punto);
+    }
+  }
+}
+
+/* ---------- Lista ---------- */
+function crearFila(r) {
+  const fila = document.createElement('article');
+  fila.className = 'fila';
+
+  const horas = document.createElement('div');
+  horas.className = 'horas';
+  for (const hora of [...r.horarios].sort()) {
+    const parte = parteDelDia(hora);
+    const t = document.createElement('span');
+    t.className = 'hora ' + parte.clase;
+    t.textContent = hora;
+    t.title = parte.nombre;
+    horas.append(t);
+  }
+
+  const cuerpo = document.createElement('div');
+
+  const meta = document.createElement('div');
+  meta.className = 'meta';
+  const tipo = document.createElement('span');
+  tipo.innerHTML = ICONOS[r.tipo] || '';
+  tipo.append(document.createTextNode(ETIQUETA_TIPO[r.tipo] || r.tipo));
+  const rep = document.createElement('span');
+  rep.textContent = ETIQUETA_REPETICION[r.repeticion] || r.repeticion;
+  meta.append(tipo, rep);
+
+  const msg = document.createElement('p');
+  msg.className = 'mensaje';
+  msg.textContent = r.mensaje;
+
+  cuerpo.append(meta, msg);
+
+  if (r.detalle && Object.keys(r.detalle).length > 0) {
+    const det = document.createElement('p');
+    det.className = 'detalle';
+    for (const [k, v] of Object.entries(r.detalle)) {
+      const s = document.createElement('span');
+      s.textContent = (ETIQUETA_DETALLE[k] || k) + ': ' + v;
+      det.append(s);
+    }
+    cuerpo.append(det);
+  }
+
+  const acciones = document.createElement('div');
+  acciones.className = 'acciones';
+
+  const bEscuchar = document.createElement('button');
+  bEscuchar.type = 'button';
+  bEscuchar.className = 'btn btn-secundario';
+  bEscuchar.textContent = 'Escuchar';
+  bEscuchar.onclick = () => hablar(r.mensaje);
+
+  const bEditar = document.createElement('button');
+  bEditar.type = 'button';
+  bEditar.className = 'btn btn-secundario';
+  bEditar.textContent = 'Editar';
+  bEditar.onclick = () => abrirFormulario(r);
+
+  const bBaja = document.createElement('button');
+  bBaja.type = 'button';
+  bBaja.className = 'btn btn-peligro';
+  bBaja.textContent = 'Desactivar';
+  bBaja.onclick = () => desactivar(r);
+
+  acciones.append(bEscuchar, bEditar, bBaja);
+  fila.append(horas, cuerpo, acciones);
+  return fila;
+}
+
+async function cargarLista() {
+  const pacienteId = $('paciente').value;
+  const lista = $('lista');
+  lista.textContent = '';
+  if (!pacienteId) {
+    $('contador').textContent = 'Recordatorios activos';
+    pintarFranja([]);
+    const v = document.createElement('p');
+    v.className = 'vacio';
+    v.textContent = 'No tienes pacientes a tu cargo todavía.';
+    lista.append(v);
+    return;
+  }
+
+  let ruta = '/recordatorios?pacienteId=' + encodeURIComponent(pacienteId);
+  if (filtroTipo) ruta += '&tipo=' + encodeURIComponent(filtroTipo);
+
+  try {
+    const datos = await api(ruta);
+    datos.sort((a, b) => [...a.horarios].sort()[0].localeCompare([...b.horarios].sort()[0]));
+    pintarFranja(datos);
+    $('contador').textContent = datos.length === 1 ? '1 recordatorio activo' : datos.length + ' recordatorios activos';
+
+    if (datos.length === 0) {
+      const v = document.createElement('p');
+      v.className = 'vacio';
+      v.textContent = 'No hay recordatorios activos. Crea el primero con “Nuevo recordatorio”.';
+      lista.append(v);
+      return;
+    }
+    for (const r of datos) lista.append(crearFila(r));
+  } catch (err) {
+    aviso(err.message, true);
+  }
+}
+
+async function cargarPacientes() {
+  const pacientes = await api('/pacientes');
+  const sel = $('paciente');
+  sel.textContent = '';
+  for (const p of pacientes) {
+    const op = document.createElement('option');
+    op.value = p._id;
+    op.textContent = p.nombre;
+    sel.append(op);
+  }
+  actualizarTitulo();
+}
+
+function actualizarTitulo() {
+  const sel = $('paciente');
+  const nombre = sel.selectedOptions[0] ? sel.selectedOptions[0].textContent : '';
+  $('tituloPaciente').textContent = nombre ? 'Día de ' + nombre : 'Día del paciente';
+}
+
+/* ---------- Formulario ---------- */
+function pintarCamposDetalle(valores = {}) {
+  const cont = $('camposDetalle');
+  cont.textContent = '';
+  for (const [campo, etiqueta] of CAMPOS_DETALLE[$('tipo').value]) {
+    const label = document.createElement('label');
+    label.htmlFor = 'd_' + campo;
+    label.textContent = etiqueta + ' (opcional)';
+    const input = document.createElement('input');
+    input.id = 'd_' + campo;
+    input.value = valores[campo] || '';
+    cont.append(label, input);
+  }
+}
+
+function abrirFormulario(r) {
+  $('formRecordatorio').reset();
+  $('errorForm').textContent = '';
+  if (r) {
+    editandoId = r._id;
+    $('tituloForm').textContent = 'Editar recordatorio';
+    $('guardar').textContent = 'Guardar cambios';
+    $('tipo').value = r.tipo;
+    $('mensaje').value = r.mensaje;
+    $('horarios').value = r.horarios.join(', ');
+    $('repeticion').value = r.repeticion;
+    pintarCamposDetalle(r.detalle || {});
+  } else {
+    editandoId = null;
+    $('tituloForm').textContent = 'Nuevo recordatorio';
+    $('guardar').textContent = 'Crear recordatorio';
+    pintarCamposDetalle();
+  }
+  $('dlg').showModal();
+  $('mensaje').focus();
+}
+
+async function desactivar(r) {
+  if (!confirm('¿Desactivar este recordatorio? Dejará de sonar, pero se conserva el historial.')) return;
+  try {
+    await api('/recordatorios/' + r._id, { method: 'DELETE' });
+    aviso('Recordatorio desactivado', false);
+    await cargarLista();
+  } catch (err) {
+    aviso(err.message, true);
+  }
+}
+
+/* ---------- Eventos ---------- */
+$('formLogin').addEventListener('submit', async e => {
+  e.preventDefault();
+  $('errorLogin').textContent = '';
+  try {
+    const r = await api('/login', {
+      method: 'POST',
+      body: JSON.stringify({ correo: $('correo').value, password: $('password').value })
+    });
+    token = r.token;
+    $('password').value = '';
+    $('quien').textContent = r.usuario.nombre;
+    $('acceso').hidden = true;
+    $('app').hidden = false;
+    await cargarPacientes();
+    await cargarLista();
+  } catch (err) {
+    $('errorLogin').textContent = err.message;
+  }
+});
+
+$('salir').addEventListener('click', () => {
+  token = null;
+  $('app').hidden = true;
+  $('acceso').hidden = false;
+  $('correo').focus();
+  aviso('Sesión cerrada', false);
+});
+
+$('paciente').addEventListener('change', () => { actualizarTitulo(); cargarLista(); });
+
+$('filtros').addEventListener('click', e => {
+  const boton = e.target.closest('.filtro');
+  if (!boton) return;
+  filtroTipo = boton.dataset.tipo;
+  for (const b of document.querySelectorAll('.filtro')) {
+    b.setAttribute('aria-pressed', String(b === boton));
+  }
+  cargarLista();
+});
+
+$('nuevo').addEventListener('click', () => abrirFormulario(null));
+$('cancelar').addEventListener('click', () => $('dlg').close());
+$('tipo').addEventListener('change', () => pintarCamposDetalle());
+$('escuchar').addEventListener('click', () => {
+  const texto = $('mensaje').value.trim();
+  if (texto) hablar(texto);
+  else $('errorForm').textContent = 'Escribe un mensaje para poder escucharlo.';
+});
+
+$('formRecordatorio').addEventListener('submit', async e => {
+  e.preventDefault();
+  $('errorForm').textContent = '';
+
+  const tipo = $('tipo').value;
+  const detalle = {};
+  for (const [campo] of CAMPOS_DETALLE[tipo]) {
+    const v = $('d_' + campo).value.trim();
+    if (v) detalle[campo] = v;
+  }
+  const cuerpo = {
+    tipo,
+    mensaje: $('mensaje').value,
+    horarios: $('horarios').value.split(',').map(h => h.trim()).filter(Boolean),
+    repeticion: $('repeticion').value
+  };
+
+  try {
+    if (editandoId) {
+      cuerpo.detalle = detalle;
+      await api('/recordatorios/' + editandoId, { method: 'PATCH', body: JSON.stringify(cuerpo) });
+      aviso('Cambios guardados', false);
+    } else {
+      cuerpo.pacienteId = $('paciente').value;
+      if (Object.keys(detalle).length > 0) cuerpo.detalle = detalle;
+      await api('/recordatorios', { method: 'POST', body: JSON.stringify(cuerpo) });
+      aviso('Recordatorio creado', false);
+    }
+    $('dlg').close();
+    await cargarLista();
+  } catch (err) {
+    $('errorForm').textContent = err.message;
+  }
+});
+</script>
+</body>
+</html>
