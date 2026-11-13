@@ -46,6 +46,14 @@ async function main() {
   await asegurarColeccion(db, 'recordatorios', validadorRecordatorios);
   await asegurarColeccion(db, 'registros', validadorRegistros);
   await db.collection('usuarios').createIndex({ correo: 1 }, { unique: true });
+    await db.collection('recordatorios').createIndex(
+    { pacienteId: 1, activo: 1, creadoEn: -1 },
+    { name: 'idx_recordatorios_paciente_activo_fecha' }
+  );
+  await db.collection('registros').createIndex(
+    { pacienteId: 1, fechaProgramada: -1 },
+    { name: 'idx_registros_paciente_fecha' }
+  );
   console.log('Colecciones, validaciones e índice creados');
   await cerrar();
 }

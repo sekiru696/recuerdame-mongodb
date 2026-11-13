@@ -17,12 +17,15 @@
     --borde-campo: #9b8070;
     --brand: #8c3b48;
     --brand-dark: #742f3b;
+    --lateral: #4a2c36;
+    --lateral-texto: #f5e6dc;
     --danger: #9b2c2c;
     --ok: #4d5a2e;
     --hora-manana: #efd9a6;
     --hora-tarde: #efc3b0;
     --hora-noche: #d3b8c0;
     --titulos: "Young Serif", Georgia, serif;
+    --ancho-lateral: 270px;
   }
 
   * { box-sizing: border-box; }
@@ -38,9 +41,11 @@
   }
 
   :focus-visible { outline: 3px solid #2b1d18; outline-offset: 3px; }
+  .lateral :focus-visible { outline-color: #fffaf5; }
 
-  h1, h2, h3, p { margin: 0; }
+  h1, h2, h3, p, dl, dd { margin: 0; }
   h1, h2 { font-family: var(--titulos); font-weight: 400; }
+  h1:focus { outline: none; }
 
   /* Botones */
   .btn {
@@ -59,6 +64,19 @@
   .btn-secundario:hover { background: #f1e2d6; }
   .btn-peligro { background: var(--surface); color: var(--danger); border-color: var(--danger); }
   .btn-peligro:hover { background: #f6e0dc; }
+  .btn-icono {
+    display: inline-grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    padding: 0;
+    border-radius: 10px;
+    border: 1.5px solid var(--borde-campo);
+    background: var(--surface);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .btn-icono:hover { background: #f1e2d6; }
 
   /* Campos */
   label { display: block; margin-top: 1.1rem; font-weight: 700; }
@@ -75,17 +93,30 @@
     border-radius: 10px;
   }
 
-  /* Reloj con la hora exacta */
-  .reloj { margin-top: 1.6rem; }
-  .reloj-hora {
-    display: block;
-    font-size: clamp(3.2rem, 11vw, 6rem);
+  /* Pantalla de carga */
+  .carga {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 1.2rem;
+    color: #fffaf5;
+    font-size: 1.25rem;
     font-weight: 700;
-    line-height: 1;
-    letter-spacing: .02em;
-    font-variant-numeric: tabular-nums;
-    color: var(--ink);
+    background: linear-gradient(180deg, #5a3344 0%, #b9686a 55%, #e3a77f 100%);
   }
+  .carga-marca { font-family: var(--titulos); font-weight: 400; font-size: 2.2rem; }
+  .carga-giro {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: 6px solid rgba(255, 250, 245, .3);
+    border-top-color: #fffaf5;
+    animation: giro .9s linear infinite;
+  }
+  @keyframes giro { to { transform: rotate(360deg); } }
 
   /* Pantalla de acceso */
   .acceso { min-height: 100vh; display: grid; grid-template-columns: 1.15fr 1fr; }
@@ -104,29 +135,132 @@
   .acceso-form .btn { margin-top: 1.5rem; width: 100%; }
   .error-login { margin-top: 1rem; min-height: 1.5rem; color: var(--danger); font-weight: 700; }
 
-  /* Panel del cuidador */
-  .portada { background: linear-gradient(180deg, #ebc7aa 0%, var(--paper) 100%); padding-bottom: 1.5rem; }
-  .cabecera {
+  /* Estructura con menú lateral */
+  .app {
+    display: grid;
+    grid-template-columns: var(--ancho-lateral) 1fr;
+    min-height: 100vh;
+    transition: grid-template-columns .2s ease;
+  }
+  .app:not(.lateral-abierto) { grid-template-columns: 0 1fr; }
+
+  .lateral {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow: hidden;
+    background: var(--lateral);
+    color: var(--lateral-texto);
+  }
+  .lateral-interior {
+    display: flex;
+    flex-direction: column;
+    width: var(--ancho-lateral);
+    height: 100%;
+    padding: 1.4rem 1rem;
+    overflow-y: auto;
+  }
+  .lateral-marca { padding: 0 .6rem; font-family: var(--titulos); font-size: 1.7rem; }
+  .lateral-usuario {
+    display: grid;
+    justify-items: center;
+    gap: .35rem;
+    margin: 1.6rem 0;
+    padding: 1.2rem .6rem;
+    text-align: center;
+    border-top: 1px solid rgba(245, 230, 220, .18);
+    border-bottom: 1px solid rgba(245, 230, 220, .18);
+  }
+  .avatar {
+    display: grid;
+    place-items: center;
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    background: #efc3b0;
+    color: var(--ink);
+    font-family: var(--titulos);
+    font-size: 2rem;
+  }
+  .rol {
+    padding: .1rem .8rem;
+    border-radius: 999px;
+    background: var(--hora-manana);
+    color: var(--ink);
+    font-size: .95rem;
+    font-weight: 700;
+  }
+  .menu { display: grid; gap: .3rem; }
+  .menu-item {
     display: flex;
     align-items: center;
+    gap: .8rem;
+    width: 100%;
+    min-height: 48px;
+    padding: 0 .9rem;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  .menu-item:hover { background: rgba(245, 230, 220, .12); }
+  .menu-item[aria-current="page"] { background: var(--hora-manana); color: var(--ink); font-weight: 700; }
+  .menu-item svg { flex: none; }
+  .lateral-pie { margin-top: auto; padding-top: 1rem; }
+
+  .velo { display: none; }
+
+  .contenido { min-width: 0; background: linear-gradient(180deg, #ebc7aa 0, var(--paper) 280px); }
+  .barra {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
     justify-content: space-between;
     gap: 1rem;
-    padding: 1rem clamp(1rem, 4vw, 2.5rem);
+    padding: 1rem clamp(1rem, 3vw, 2.2rem);
   }
-  .cabecera strong { font-family: var(--titulos); font-weight: 400; font-size: 1.6rem; }
-  .sesion { display: flex; align-items: center; gap: .8rem; color: var(--ink); }
-  .sesion .btn { min-height: 42px; }
+  .barra .selector { min-width: 15rem; }
+  .barra .selector label { margin-top: 0; font-size: .95rem; }
 
-  .portada-contenido { max-width: 900px; margin: 0 auto; padding: 1.2rem clamp(1rem, 4vw, 2rem) 0; }
-  .encabezado { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 1.2rem; }
-  .encabezado h2 { font-size: clamp(2rem, 5vw, 2.9rem); line-height: 1.1; }
-  .selector { min-width: 14rem; }
-  .selector label { margin-top: 0; font-size: .95rem; }
+  main { max-width: 960px; margin: 0 auto; padding: .5rem clamp(1rem, 3vw, 2.2rem) 4rem; }
+  .vista > h1 { font-size: clamp(2rem, 5vw, 2.9rem); line-height: 1.1; }
 
-  main { max-width: 900px; margin: 0 auto; padding: 1rem clamp(1rem, 4vw, 2rem) 4rem; }
+  /* Inicio */
+  .inicio-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 1.2rem; margin-top: 1.5rem; }
+  .panel {
+    padding: 1.5rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+  }
+  .panel h2 { font-size: 1.3rem; }
+  .reloj-panel { display: grid; place-items: center; }
+  .reloj-hora {
+    display: block;
+    font-size: clamp(2.8rem, 8vw, 4.8rem);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: .02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .proximo-hora { margin-top: .6rem; font-size: 2.6rem; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .proximo-msg { margin-top: .4rem; font-size: 1.2rem; font-weight: 700; }
+  .proximo-meta { margin-top: .3rem; color: var(--ink-soft); font-size: 1rem; }
+  .proximo .btn { margin-top: 1rem; min-height: 42px; }
+  .proximo-vacio { margin-top: .8rem; color: var(--ink-soft); }
 
-  .barra-lista { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; }
-  .barra-lista h3 { font-size: 1.3rem; }
+  .resumen { display: flex; flex-wrap: wrap; margin-top: 1.2rem; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; }
+  .dato { flex: 1 1 8rem; padding: 1.2rem 1.5rem; border-left: 1px solid var(--line); }
+  .dato:first-child { border-left: 0; }
+  .dato strong { display: block; font-size: 2.2rem; line-height: 1.1; }
+  .dato span { color: var(--ink-soft); font-size: 1rem; }
+
+  /* Recordatorios */
+  .barra-lista { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 1.4rem; }
+  .barra-lista h2 { font-size: 1.4rem; }
   .filtros { display: flex; flex-wrap: wrap; gap: .4rem; }
   .filtro {
     min-height: 42px;
@@ -140,34 +274,14 @@
   }
   .filtro[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: #fffaf5; font-weight: 700; }
 
-  .lista {
-    margin-top: 1.2rem;
-    overflow: hidden;
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: 18px;
-  }
-  .fila {
-    display: grid;
-    grid-template-columns: 8rem 1fr auto;
-    gap: 1.4rem;
-    padding: 1.4rem 1.5rem;
-    border-top: 1px solid var(--line);
-  }
+  .lista { margin-top: 1.2rem; overflow: hidden; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; }
+  .fila { display: grid; grid-template-columns: 8rem 1fr auto; gap: 1.4rem; padding: 1.4rem 1.5rem; border-top: 1px solid var(--line); }
   .fila:first-child { border-top: 0; }
   .horas { display: flex; flex-direction: column; align-items: flex-start; gap: .4rem; }
-  .hora {
-    padding: .1rem .8rem;
-    border-radius: 10px;
-    font-size: 1.45rem;
-    font-weight: 700;
-    line-height: 1.4;
-    font-variant-numeric: tabular-nums;
-  }
+  .hora { padding: .1rem .8rem; border-radius: 10px; font-size: 1.45rem; font-weight: 700; line-height: 1.4; font-variant-numeric: tabular-nums; }
   .hora.manana { background: var(--hora-manana); }
   .hora.tarde { background: var(--hora-tarde); }
   .hora.noche { background: var(--hora-noche); }
-
   .meta { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem 1.1rem; color: var(--ink-soft); font-size: .98rem; }
   .meta span { display: inline-flex; align-items: center; gap: .4rem; }
   .mensaje { margin: .25rem 0; font-size: 1.25rem; font-weight: 700; }
@@ -176,6 +290,13 @@
   .acciones { display: flex; flex-wrap: wrap; align-items: flex-start; gap: .5rem; }
   .acciones .btn { min-height: 42px; }
   .vacio { padding: 2.2rem 1.5rem; color: var(--ink-soft); }
+
+  /* Perfil */
+  .perfil { margin-top: 1.5rem; max-width: 560px; }
+  .perfil div { display: grid; grid-template-columns: 11rem 1fr; gap: 1rem; padding: .9rem 0; border-top: 1px solid var(--line); }
+  .perfil div:first-child { border-top: 0; }
+  .perfil dt { color: var(--ink-soft); }
+  .perfil dd { font-weight: 700; overflow-wrap: anywhere; }
 
   /* Ventana de formulario */
   dialog {
@@ -216,11 +337,27 @@
   .toast.visible { opacity: 1; transform: translate(-50%, 0); }
   .toast.error { background: var(--danger); }
 
+  @media (max-width: 860px) {
+    .app, .app:not(.lateral-abierto) { grid-template-columns: 1fr; }
+    .lateral {
+      position: fixed;
+      inset: 0 auto 0 0;
+      z-index: 30;
+      width: var(--ancho-lateral);
+      transform: translateX(-100%);
+      transition: transform .2s ease;
+    }
+    .app.lateral-abierto .lateral { transform: none; }
+    .app.lateral-abierto .velo { display: block; position: fixed; inset: 0; z-index: 20; background: rgba(58, 42, 36, .5); }
+    .inicio-grid { grid-template-columns: 1fr; }
+  }
+
   @media (max-width: 760px) {
     .acceso { grid-template-columns: 1fr; }
     .marca { min-height: 240px; padding: 2rem 1.5rem; }
     .fila { grid-template-columns: 1fr; gap: .8rem; padding: 1.2rem; }
     .horas { flex-direction: row; flex-wrap: wrap; }
+    .perfil div { grid-template-columns: 1fr; gap: .2rem; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -229,6 +366,13 @@
 </style>
 </head>
 <body>
+
+<!-- Pantalla de carga -->
+<div class="carga" id="carga" hidden role="status" aria-live="polite">
+  <span class="carga-marca">Recuérdame</span>
+  <div class="carga-giro" aria-hidden="true"></div>
+  <p>Cargando…</p>
+</div>
 
 <!-- Acceso -->
 <div class="acceso" id="acceso">
@@ -262,46 +406,107 @@
   </section>
 </div>
 
-<!-- Panel -->
-<div id="app" hidden>
-  <div class="portada">
-    <header class="cabecera">
-      <strong>Recuérdame</strong>
-      <div class="sesion">
-        <span id="quien"></span>
-        <button class="btn btn-secundario" id="salir" type="button">Salir</button>
+<!-- Aplicación -->
+<div class="app lateral-abierto" id="app" hidden>
+  <aside class="lateral" id="lateral" aria-label="Menú principal">
+    <div class="lateral-interior">
+      <div class="lateral-marca">Recuérdame</div>
+
+      <div class="lateral-usuario">
+        <div class="avatar" id="avatar" aria-hidden="true"></div>
+        <strong id="usuarioNombre"></strong>
+        <span class="rol" id="usuarioRol"></span>
+      </div>
+
+      <nav class="menu" aria-label="Secciones">
+        <button class="menu-item" type="button" data-vista="inicio" aria-current="page">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>
+          Inicio
+        </button>
+        <button class="menu-item" type="button" data-vista="recordatorios">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>
+          Recordatorios
+        </button>
+        <button class="menu-item" type="button" data-vista="perfil">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+          Mi perfil
+        </button>
+      </nav>
+
+      <div class="lateral-pie">
+        <button class="menu-item" type="button" id="salir">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+          Cerrar sesión
+        </button>
+      </div>
+    </div>
+  </aside>
+  <div class="velo" id="velo"></div>
+
+  <div class="contenido">
+    <header class="barra">
+      <button class="btn-icono" id="alternarMenu" type="button" aria-label="Mostrar u ocultar el menú" aria-controls="lateral" aria-expanded="true">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <div class="selector" id="selectorPaciente">
+        <label for="paciente">Paciente</label>
+        <select id="paciente"></select>
       </div>
     </header>
 
-    <div class="portada-contenido">
-      <div class="encabezado">
-        <h2 id="tituloPaciente">Día del paciente</h2>
-        <div class="selector">
-          <label for="paciente">Paciente</label>
-          <select id="paciente"></select>
+    <main>
+      <!-- Inicio -->
+      <section class="vista" id="vista-inicio" aria-labelledby="tituloInicio">
+        <h1 id="tituloInicio" tabindex="-1">Día del paciente</h1>
+        <div class="inicio-grid">
+          <div class="panel reloj-panel" role="timer" aria-label="Hora actual">
+            <span class="reloj-hora" id="reloj">--:--:--</span>
+          </div>
+          <div class="panel proximo">
+            <h2>Próximo horario</h2>
+            <p class="proximo-hora" id="proximoHora"></p>
+            <p class="proximo-msg" id="proximoMensaje"></p>
+            <p class="proximo-meta" id="proximoMeta"></p>
+            <p class="proximo-vacio" id="proximoVacio">Sin horarios programados.</p>
+            <button class="btn btn-secundario" id="proximoEscuchar" type="button" hidden>Escuchar</button>
+          </div>
         </div>
-      </div>
+        <div class="resumen">
+          <div class="dato"><strong id="cntTotal">0</strong><span>Recordatorios activos</span></div>
+          <div class="dato"><strong id="cntMed">0</strong><span>Medicamentos</span></div>
+          <div class="dato"><strong id="cntCita">0</strong><span>Citas</span></div>
+          <div class="dato"><strong id="cntFecha">0</strong><span>Fechas especiales</span></div>
+        </div>
+      </section>
 
-      <div class="reloj" role="timer" aria-label="Hora actual">
-        <span class="reloj-hora" id="reloj">--:--:--</span>
-      </div>
-    </div>
+      <!-- Recordatorios -->
+      <section class="vista" id="vista-recordatorios" aria-labelledby="tituloRecordatorios" hidden>
+        <h1 id="tituloRecordatorios" tabindex="-1">Recordatorios</h1>
+        <div class="barra-lista">
+          <h2 id="contador">Recordatorios activos</h2>
+          <div class="filtros" id="filtros">
+            <button class="filtro" type="button" data-tipo="" aria-pressed="true">Todos</button>
+            <button class="filtro" type="button" data-tipo="medicamento" aria-pressed="false">Medicamentos</button>
+            <button class="filtro" type="button" data-tipo="cita" aria-pressed="false">Citas</button>
+            <button class="filtro" type="button" data-tipo="fecha_especial" aria-pressed="false">Fechas especiales</button>
+          </div>
+          <button class="btn btn-primario" id="nuevo" type="button">Nuevo recordatorio</button>
+        </div>
+        <div class="lista" id="lista"></div>
+      </section>
+
+      <!-- Perfil -->
+      <section class="vista" id="vista-perfil" aria-labelledby="tituloPerfil" hidden>
+        <h1 id="tituloPerfil" tabindex="-1">Mi perfil</h1>
+        <dl class="panel perfil">
+          <div><dt>Nombre</dt><dd id="perfilNombre"></dd></div>
+          <div><dt>Correo</dt><dd id="perfilCorreo"></dd></div>
+          <div><dt>Tipo de usuario</dt><dd id="perfilRol"></dd></div>
+          <div><dt>Pacientes a su cargo</dt><dd id="perfilPacientes"></dd></div>
+        </dl>
+      </section>
+    </main>
   </div>
-
-  <main>
-    <div class="barra-lista">
-      <h3 id="contador">Recordatorios activos</h3>
-      <div class="filtros" id="filtros">
-        <button class="filtro" type="button" data-tipo="" aria-pressed="true">Todos</button>
-        <button class="filtro" type="button" data-tipo="medicamento" aria-pressed="false">Medicamentos</button>
-        <button class="filtro" type="button" data-tipo="cita" aria-pressed="false">Citas</button>
-        <button class="filtro" type="button" data-tipo="fecha_especial" aria-pressed="false">Fechas especiales</button>
-      </div>
-      <button class="btn btn-primario" id="nuevo" type="button">Nuevo recordatorio</button>
-    </div>
-
-    <div class="lista" id="lista"></div>
-  </main>
 </div>
 
 <!-- Formulario -->
@@ -350,6 +555,7 @@
 <script>
 const $ = id => document.getElementById(id);
 
+const ETIQUETA_ROL = { cuidador: 'Cuidador', paciente: 'Paciente', doctor: 'Doctor' };
 const ETIQUETA_TIPO = { medicamento: 'Medicamento', cita: 'Cita', fecha_especial: 'Fecha especial' };
 const ETIQUETA_REPETICION = { unica: 'Una vez', diaria: 'Todos los días', semanal: 'Cada semana' };
 const ETIQUETA_DETALLE = { nombre: 'Medicamento', dosis: 'Dosis', lugar: 'Lugar', profesional: 'Profesional', persona: 'Motivo' };
@@ -367,9 +573,17 @@ const ICONOS = {
 };
 
 let token = null;
+let todos = [];          // todos los recordatorios activos del paciente elegido
 let filtroTipo = '';
 let editandoId = null;
 let temporizador = null;
+let vistaActual = 'inicio';
+let proximoMensaje = '';
+
+/* ---------- Utilidades ---------- */
+function cargando(visible) {
+  $('carga').hidden = !visible;
+}
 
 function parteDelDia(hora) {
   const h = Number(hora.slice(0, 2));
@@ -423,9 +637,91 @@ function actualizarReloj() {
 
 function ticReloj() {
   actualizarReloj();
+  if (new Date().getSeconds() === 0) pintarProximo();
   setTimeout(ticReloj, 1000 - (Date.now() % 1000));
 }
 ticReloj();
+
+/* ---------- Navegación ---------- */
+function esMovil() { return window.matchMedia('(max-width: 860px)').matches; }
+
+function ajustarLateral() {
+  $('app').classList.toggle('lateral-abierto', !esMovil());
+  $('alternarMenu').setAttribute('aria-expanded', String(!esMovil()));
+}
+
+function alternarLateral(forzarCierre) {
+  const app = $('app');
+  const abrir = forzarCierre ? false : !app.classList.contains('lateral-abierto');
+  app.classList.toggle('lateral-abierto', abrir);
+  $('alternarMenu').setAttribute('aria-expanded', String(abrir));
+}
+
+function irA(vista, enfocar) {
+  vistaActual = vista;
+  for (const sec of document.querySelectorAll('.vista')) sec.hidden = sec.id !== 'vista-' + vista;
+  for (const item of document.querySelectorAll('.menu-item[data-vista]')) {
+    if (item.dataset.vista === vista) item.setAttribute('aria-current', 'page');
+    else item.removeAttribute('aria-current');
+  }
+  $('selectorPaciente').hidden = vista === 'perfil';
+  if (vista === 'perfil') cargarPerfil();
+  if (enfocar) {
+    const titulo = document.querySelector('#vista-' + vista + ' h1');
+    if (titulo) titulo.focus();
+  }
+}
+
+/* ---------- Inicio ---------- */
+function proximoHorario(lista) {
+  const ahora = new Date();
+  const minutosAhora = ahora.getHours() * 60 + ahora.getMinutes();
+  const hoy = ahora.getDay();
+  let mejor = null;
+  for (const r of lista) {
+    if (r.repeticion === 'semanal' && Array.isArray(r.diasSemana) && !r.diasSemana.includes(hoy)) continue;
+    for (const hora of r.horarios) {
+      const [h, m] = hora.split(':').map(Number);
+      const minutos = h * 60 + m;
+      if (minutos >= minutosAhora && (!mejor || minutos < mejor.minutos)) mejor = { minutos, hora, r };
+    }
+  }
+  return mejor;
+}
+
+function pintarProximo() {
+  const p = proximoHorario(todos);
+  const hay = Boolean(p);
+  $('proximoHora').textContent = hay ? p.hora : '';
+  $('proximoMensaje').textContent = hay ? p.r.mensaje : '';
+  $('proximoMeta').textContent = hay ? (ETIQUETA_TIPO[p.r.tipo] || p.r.tipo) : '';
+  $('proximoVacio').hidden = hay;
+  $('proximoVacio').textContent = todos.length === 0 ? 'Este paciente no tiene recordatorios activos.' : 'No quedan horarios programados para hoy.';
+  $('proximoEscuchar').hidden = !hay;
+  proximoMensaje = hay ? p.r.mensaje : '';
+}
+
+function pintarInicio() {
+  const cuenta = tipo => todos.filter(r => r.tipo === tipo).length;
+  $('cntTotal').textContent = todos.length;
+  $('cntMed').textContent = cuenta('medicamento');
+  $('cntCita').textContent = cuenta('cita');
+  $('cntFecha').textContent = cuenta('fecha_especial');
+  pintarProximo();
+}
+
+/* ---------- Perfil ---------- */
+async function cargarPerfil() {
+  try {
+    const u = await api('/yo');
+    $('perfilNombre').textContent = u.nombre;
+    $('perfilCorreo').textContent = u.correo;
+    $('perfilRol').textContent = ETIQUETA_ROL[u.rol] || u.rol;
+    $('perfilPacientes').textContent = String($('paciente').options.length);
+  } catch (err) {
+    aviso(err.message, true);
+  }
+}
 
 /* ---------- Lista ---------- */
 function crearFila(r) {
@@ -497,38 +793,59 @@ function crearFila(r) {
   return fila;
 }
 
+function mensajeVacio(texto) {
+  const v = document.createElement('p');
+  v.className = 'vacio';
+  v.textContent = texto;
+  return v;
+}
+
 async function cargarLista() {
   const pacienteId = $('paciente').value;
   const lista = $('lista');
   lista.textContent = '';
+
   if (!pacienteId) {
     $('contador').textContent = 'Recordatorios activos';
-    const v = document.createElement('p');
-    v.className = 'vacio';
-    v.textContent = 'No tienes pacientes a tu cargo todavía.';
-    lista.append(v);
+    lista.append(mensajeVacio('No tienes pacientes a tu cargo todavía.'));
     return;
   }
 
-  let ruta = '/recordatorios?pacienteId=' + encodeURIComponent(pacienteId);
-  if (filtroTipo) ruta += '&tipo=' + encodeURIComponent(filtroTipo);
-
-  try {
-    const datos = await api(ruta);
-    datos.sort((a, b) => [...a.horarios].sort()[0].localeCompare([...b.horarios].sort()[0]));
-    $('contador').textContent = datos.length === 1 ? '1 recordatorio activo' : datos.length + ' recordatorios activos';
-
-    if (datos.length === 0) {
-      const v = document.createElement('p');
-      v.className = 'vacio';
-      v.textContent = 'No hay recordatorios activos. Crea el primero con “Nuevo recordatorio”.';
-      lista.append(v);
+  let datos = todos;
+  if (filtroTipo) {
+    lista.append(mensajeVacio('Cargando…'));
+    try {
+      datos = await api('/recordatorios?pacienteId=' + encodeURIComponent(pacienteId) + '&tipo=' + encodeURIComponent(filtroTipo));
+    } catch (err) {
+      lista.textContent = '';
+      aviso(err.message, true);
       return;
     }
-    for (const r of datos) lista.append(crearFila(r));
-  } catch (err) {
-    aviso(err.message, true);
+    lista.textContent = '';
   }
+
+  datos = [...datos].sort((a, b) => [...a.horarios].sort()[0].localeCompare([...b.horarios].sort()[0]));
+  $('contador').textContent = datos.length === 1 ? '1 recordatorio activo' : datos.length + ' recordatorios activos';
+
+  if (datos.length === 0) {
+    lista.append(mensajeVacio('No hay recordatorios activos. Crea el primero con “Nuevo recordatorio”.'));
+    return;
+  }
+  for (const r of datos) lista.append(crearFila(r));
+}
+
+async function cargarTodo() {
+  const pacienteId = $('paciente').value;
+  todos = [];
+  if (pacienteId) {
+    try {
+      todos = await api('/recordatorios?pacienteId=' + encodeURIComponent(pacienteId));
+    } catch (err) {
+      aviso(err.message, true);
+    }
+  }
+  pintarInicio();
+  await cargarLista();
 }
 
 async function cargarPacientes() {
@@ -547,7 +864,7 @@ async function cargarPacientes() {
 function actualizarTitulo() {
   const sel = $('paciente');
   const nombre = sel.selectedOptions[0] ? sel.selectedOptions[0].textContent : '';
-  $('tituloPaciente').textContent = nombre ? 'Día de ' + nombre : 'Día del paciente';
+  $('tituloInicio').textContent = nombre ? 'Día de ' + nombre : 'Día del paciente';
 }
 
 /* ---------- Formulario ---------- */
@@ -592,7 +909,7 @@ async function desactivar(r) {
   try {
     await api('/recordatorios/' + r._id, { method: 'DELETE' });
     aviso('Recordatorio desactivado', false);
-    await cargarLista();
+    await cargarTodo();
   } catch (err) {
     aviso(err.message, true);
   }
@@ -602,32 +919,63 @@ async function desactivar(r) {
 $('formLogin').addEventListener('submit', async e => {
   e.preventDefault();
   $('errorLogin').textContent = '';
+  cargando(true);
   try {
     const r = await api('/login', {
       method: 'POST',
       body: JSON.stringify({ correo: $('correo').value, password: $('password').value })
     });
+
+    if (r.usuario.rol !== 'cuidador') {
+      const nombreRol = (ETIQUETA_ROL[r.usuario.rol] || r.usuario.rol).toLowerCase();
+      throw new Error('La vista para el tipo de usuario “' + nombreRol + '” todavía no está disponible.');
+    }
+
     token = r.token;
     $('password').value = '';
-    $('quien').textContent = r.usuario.nombre;
+    $('usuarioNombre').textContent = r.usuario.nombre;
+    $('usuarioRol').textContent = ETIQUETA_ROL[r.usuario.rol] || r.usuario.rol;
+    $('avatar').textContent = r.usuario.nombre.trim().charAt(0).toUpperCase();
+
+    await cargarPacientes();
+    await cargarTodo();
+
     $('acceso').hidden = true;
     $('app').hidden = false;
-    await cargarPacientes();
-    await cargarLista();
+    ajustarLateral();
+    irA('inicio', false);
   } catch (err) {
+    token = null;
     $('errorLogin').textContent = err.message;
+  } finally {
+    cargando(false);
   }
 });
 
 $('salir').addEventListener('click', () => {
   token = null;
+  todos = [];
   $('app').hidden = true;
   $('acceso').hidden = false;
   $('correo').focus();
   aviso('Sesión cerrada', false);
 });
 
-$('paciente').addEventListener('change', () => { actualizarTitulo(); cargarLista(); });
+$('alternarMenu').addEventListener('click', () => alternarLateral(false));
+$('velo').addEventListener('click', () => alternarLateral(true));
+window.addEventListener('resize', () => { if (!$('app').hidden) ajustarLateral(); });
+
+for (const item of document.querySelectorAll('.menu-item[data-vista]')) {
+  item.addEventListener('click', () => {
+    irA(item.dataset.vista, true);
+    if (esMovil()) alternarLateral(true);
+  });
+}
+
+$('paciente').addEventListener('change', async () => {
+  actualizarTitulo();
+  await cargarTodo();
+});
 
 $('filtros').addEventListener('click', e => {
   const boton = e.target.closest('.filtro');
@@ -639,6 +987,7 @@ $('filtros').addEventListener('click', e => {
   cargarLista();
 });
 
+$('proximoEscuchar').addEventListener('click', () => { if (proximoMensaje) hablar(proximoMensaje); });
 $('nuevo').addEventListener('click', () => abrirFormulario(null));
 $('cancelar').addEventListener('click', () => $('dlg').close());
 $('tipo').addEventListener('change', () => pintarCamposDetalle());
@@ -677,7 +1026,7 @@ $('formRecordatorio').addEventListener('submit', async e => {
       aviso('Recordatorio creado', false);
     }
     $('dlg').close();
-    await cargarLista();
+    await cargarTodo();
   } catch (err) {
     $('errorForm').textContent = err.message;
   }
