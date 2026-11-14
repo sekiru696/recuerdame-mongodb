@@ -1,10 +1,16 @@
+require('dotenv').config();
 const jwt = require('jsonwebtoken');
+
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+  console.error('Falta JWT_SECRET en el archivo .env o es demasiado corta (mínimo 32 caracteres).');
+  process.exit(1);
+}
 
 function crearToken(usuario) {
   return jwt.sign(
     { id: usuario._id.toString(), rol: usuario.rol },
     process.env.JWT_SECRET,
-    { expiresIn: '8h' }
+    { algorithm: 'HS256', expiresIn: '8h' }
   );
 }
 
@@ -15,7 +21,7 @@ function exigirSesion(req, res, next) {
     return res.status(401).json({ error: 'Debes iniciar sesión' });
   }
   try {
-    req.usuario = jwt.verify(token, process.env.JWT_SECRET);
+    req.usuario = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
     next();
   } catch (err) {
     res.status(401).json({ error: 'Sesión inválida o vencida' });
