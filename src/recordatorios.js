@@ -92,13 +92,19 @@ router.post('/recordatorios', gestores, async (req, res) => {
   }
 });
 
+const ORDENES = {
+  recientes: { creadoEn: -1 },
+  antiguos: { creadoEn: 1 },
+  hora: { horarios: 1, _id: 1 }
+};
+
 router.get('/recordatorios', gestores, async (req, res) => {
   try {
     const db = await conectar();
     const permitidos = await idsDePacientes(db, req.usuario.id);
     const filtro = { pacienteId: { $in: permitidos }, activo: true };
 
-    const { pacienteId, tipo } = req.query;
+    const { pacienteId, tipo, pagina, limite, orden } = req.query;
     if (pacienteId) {
       if (!ObjectId.isValid(pacienteId) || !permitidos.some(id => id.toString() === pacienteId)) {
         return res.status(403).json({ error: 'Ese paciente no está a tu cargo' });
@@ -110,11 +116,36 @@ router.get('/recordatorios', gestores, async (req, res) => {
       filtro.tipo = tipo;
     }
 
-    const lista = await db.collection('recordatorios')
+    const clave = orden || 'recientes';
+    if (!ORDENES[clave]) {
+      return res.status(400).json({ error: 'Orden inválido. Usa: ' + Object.keys(ORDENES).join(', ') });
+    }
+    const coleccion = db.collection('recordatorios');
+
+    // Sin "pagina" se devuelve la lista completa (lo usa la pantalla de inicio)
+    if (pagina === undefined) {
+      const lista = await coleccion.find(filtro).sort(ORDENES[clave]).toArray();
+      return res.json(lista);
+    }
+
+    const numeroPagina = Number(pagina);
+    if (!Number.isInteger(numeroPagina) || numeroPagina < 1) {
+      return res.status(400).json({ error: 'La página debe ser un número entero desde 1' });
+    }
+    const porPagina = Math.min(Math.max(parseInt(limite, 10) || 5, 1), 50);
+
+    const total = await coleccion.countDocuments(filtro);
+    const paginas = Math.max(Math.ceil(total / porPagina), 1);
+    const actual = Math.min(numeroPagina, paginas);
+
+    const datos = await coleccion
       .find(filtro)
-      .sort({ creadoEn: -1 })
+      .sort(ORDENES[clave])
+      .skip((actual - 1) * porPagina)
+      .limit(porPagina)
       .toArray();
-    res.json(lista);
+
+    res.json({ datos, total, pagina: actual, paginas, limite: porPagina });
   } catch (err) {
     console.error('Error al listar recordatorios:', err.message);
     res.status(500).json({ error: 'Error interno del servidor' });

@@ -291,6 +291,13 @@
   .acciones .btn { min-height: 42px; }
   .vacio { padding: 2.2rem 1.5rem; color: var(--ink-soft); }
 
+  .orden { min-width: 12rem; }
+  .orden label { margin-top: 0; font-size: .95rem; }
+  .orden select { margin-top: .2rem; min-height: 44px; }
+  .paginacion { display: flex; align-items: center; justify-content: center; gap: 1rem; margin-top: 1.2rem; }
+  .paginacion .btn { min-height: 42px; }
+  .paginacion .btn:disabled { opacity: .45; cursor: not-allowed; }
+
   /* Perfil */
   .perfil { margin-top: 1.5rem; max-width: 560px; }
   .perfil div { display: grid; grid-template-columns: 11rem 1fr; gap: 1rem; padding: .9rem 0; border-top: 1px solid var(--line); }
@@ -528,9 +535,22 @@
             <button class="filtro" type="button" data-tipo="cita" aria-pressed="false">Citas</button>
             <button class="filtro" type="button" data-tipo="fecha_especial" aria-pressed="false">Fechas especiales</button>
           </div>
+          <div class="orden">
+            <label for="orden">Ordenar por</label>
+            <select id="orden">
+              <option value="recientes">Más recientes</option>
+              <option value="antiguos">Más antiguos</option>
+              <option value="hora">Hora del aviso</option>
+            </select>
+          </div>
           <button class="btn btn-primario" id="nuevo" type="button">Nuevo recordatorio</button>
         </div>
         <div class="lista" id="lista"></div>
+        <nav class="paginacion" id="paginacion" aria-label="Páginas de la lista" hidden>
+          <button class="btn btn-secundario" id="anterior" type="button">Anterior</button>
+          <span id="infoPagina" aria-live="polite"></span>
+          <button class="btn btn-secundario" id="siguiente" type="button">Siguiente</button>
+        </nav>
       </section>
 
       <!-- Mi día (paciente) -->
@@ -637,6 +657,9 @@ let token = null;
 let usuario = null;
 let todos = [];          // todos los recordatorios activos del paciente elegido
 let filtroTipo = '';
+let pagina = 1;
+let totalPaginas = 1;
+const POR_PAGINA = 5;
 let editandoId = null;
 let temporizador = null;
 let vistaActual = 'inicio';
@@ -878,31 +901,38 @@ async function cargarLista() {
 
   if (!pacienteId) {
     $('contador').textContent = 'Recordatorios activos';
+    $('paginacion').hidden = true;
     lista.append(mensajeVacio('No tienes pacientes a tu cargo todavía.'));
     return;
   }
 
-  let datos = todos;
-  if (filtroTipo) {
-    lista.append(mensajeVacio('Cargando…'));
-    try {
-      datos = await api('/recordatorios?pacienteId=' + encodeURIComponent(pacienteId) + '&tipo=' + encodeURIComponent(filtroTipo));
-    } catch (err) {
-      lista.textContent = '';
-      aviso(err.message, true);
+  lista.append(mensajeVacio('Cargando…'));
+  let ruta = '/recordatorios?pacienteId=' + encodeURIComponent(pacienteId)
+    + '&pagina=' + pagina + '&limite=' + POR_PAGINA + '&orden=' + encodeURIComponent($('orden').value);
+  if (filtroTipo) ruta += '&tipo=' + encodeURIComponent(filtroTipo);
+
+  try {
+    const r = await api(ruta);
+    pagina = r.pagina;
+    totalPaginas = r.paginas;
+    lista.textContent = '';
+    $('contador').textContent = r.total === 1 ? '1 recordatorio activo' : r.total + ' recordatorios activos';
+
+    if (r.datos.length === 0) {
+      $('paginacion').hidden = true;
+      lista.append(mensajeVacio('No hay recordatorios activos. Crea el primero con “Nuevo recordatorio”.'));
       return;
     }
+    for (const rec of r.datos) lista.append(crearFila(rec));
+
+    $('paginacion').hidden = r.paginas <= 1;
+    $('infoPagina').textContent = 'Página ' + r.pagina + ' de ' + r.paginas;
+    $('anterior').disabled = r.pagina <= 1;
+    $('siguiente').disabled = r.pagina >= r.paginas;
+  } catch (err) {
     lista.textContent = '';
+    aviso(err.message, true);
   }
-
-  datos = [...datos].sort((a, b) => [...a.horarios].sort()[0].localeCompare([...b.horarios].sort()[0]));
-  $('contador').textContent = datos.length === 1 ? '1 recordatorio activo' : datos.length + ' recordatorios activos';
-
-  if (datos.length === 0) {
-    lista.append(mensajeVacio('No hay recordatorios activos. Crea el primero con “Nuevo recordatorio”.'));
-    return;
-  }
-  for (const r of datos) lista.append(crearFila(r));
 }
 
 async function cargarTodo() {
@@ -1181,6 +1211,7 @@ for (const item of document.querySelectorAll('.menu-item[data-vista]')) {
 }
 
 $('paciente').addEventListener('change', async () => {
+  pagina = 1;
   actualizarTitulo();
   await cargarTodo();
   if (vistaActual === 'historial') cargarHistorial();
@@ -1190,12 +1221,16 @@ $('filtros').addEventListener('click', e => {
   const boton = e.target.closest('.filtro');
   if (!boton) return;
   filtroTipo = boton.dataset.tipo;
+  pagina = 1;
   for (const b of document.querySelectorAll('.filtro')) {
     b.setAttribute('aria-pressed', String(b === boton));
   }
   cargarLista();
 });
 
+$('orden').addEventListener('change', () => { pagina = 1; cargarLista(); });
+$('anterior').addEventListener('click', () => { if (pagina > 1) { pagina -= 1; cargarLista(); } });
+$('siguiente').addEventListener('click', () => { if (pagina < totalPaginas) { pagina += 1; cargarLista(); } });
 $('proximoEscuchar').addEventListener('click', () => { if (proximoMensaje) hablar(proximoMensaje); });
 $('nuevo').addEventListener('click', () => abrirFormulario(null));
 $('cancelar').addEventListener('click', () => $('dlg').close());
