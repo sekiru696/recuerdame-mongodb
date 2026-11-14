@@ -19,13 +19,14 @@ async function main() {
   const p3 = await usuario(db, 'paciente3@ejemplo.cl', 'Paciente Tres', 'paciente');
   const c1 = await usuario(db, 'cuidador@ejemplo.cl', 'Cuidador Demo', 'cuidador', { pacientesIds: [p1._id, p2._id] });
   const c2 = await usuario(db, 'cuidador2@ejemplo.cl', 'Cuidadora Dos', 'cuidador', { pacientesIds: [p3._id] });
+  const d1 = await usuario(db, 'doctor@ejemplo.cl', 'Doctora Demo', 'doctor', { pacientesIds: [p1._id, p2._id] });
 
   await db.collection('recordatorios').deleteMany({});
   await db.collection('registros').deleteMany({});
 
   const plantillas = [
     { p: p1, c: c1, tipo: 'medicamento', mensaje: 'Es hora de tomar tu pastilla con un vaso de agua', detalle: { nombre: 'Donepezilo', dosis: '5 mg' }, horarios: ['08:00', '20:00'], repeticion: 'diaria' },
-    { p: p1, c: c1, tipo: 'medicamento', mensaje: 'Toma tu pastilla de la presión con el desayuno', detalle: { nombre: 'Losartán', dosis: '50 mg' }, horarios: ['09:00'], repeticion: 'diaria' },
+    { p: p1, c: d1, tipo: 'medicamento', mensaje: 'Toma tu pastilla de la presión con el desayuno', detalle: { nombre: 'Losartán', dosis: '50 mg' }, horarios: ['09:00'], repeticion: 'diaria' },
     { p: p1, c: c1, tipo: 'cita', mensaje: 'Hoy tienes control con la doctora a las 11', detalle: { lugar: 'Consultorio central', profesional: 'Dra. Soto' }, horarios: ['10:00'], repeticion: 'unica' },
     { p: p1, c: c1, tipo: 'fecha_especial', mensaje: 'Hoy es el cumpleaños de tu nieta Camila', detalle: { persona: 'Camila' }, horarios: ['12:00'], repeticion: 'unica' },
     { p: p1, c: c1, tipo: 'medicamento', mensaje: 'Es hora de tu vitamina con la cena', detalle: { nombre: 'Vitamina D', dosis: '1 cápsula' }, horarios: ['19:30'], repeticion: 'semanal', diasSemana: [1, 3, 5] },
@@ -79,7 +80,7 @@ async function main() {
   }
   await db.collection('registros').insertMany(registros);
 
-  console.log(`Datos de ejemplo cargados: 5 usuarios, ${creados.length} recordatorios, ${registros.length} registros`);
+  console.log(`Datos de ejemplo cargados: 6 usuarios, ${creados.length} recordatorios, ${registros.length} registros`);
   await cerrar();
 }
 

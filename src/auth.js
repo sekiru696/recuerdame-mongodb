@@ -22,13 +22,13 @@ function exigirSesion(req, res, next) {
   }
 }
 
-function exigirRol(rol) {
+function exigirRoles(...roles) {
   return (req, res, next) => {
-    if (req.usuario.rol !== rol) {
+    if (!roles.includes(req.usuario.rol)) {
       return res.status(403).json({ error: 'No tienes permiso para esta acción' });
     }
     next();
   };
 }
 
-module.exports = { crearToken, exigirSesion, exigirRol };
+module.exports = { crearToken, exigirSesion, exigirRoles };

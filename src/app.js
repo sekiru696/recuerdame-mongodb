@@ -56,6 +56,7 @@ app.get('/api/yo', exigirSesion, async (req, res) => {
 });
 
 app.use('/api', require('./recordatorios'));
+app.use('/api', require('./paciente'));
 
 const PUERTO = process.env.PORT || 3000;
 app.listen(PUERTO, () => {

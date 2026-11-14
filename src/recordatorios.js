@@ -1,21 +1,31 @@
 const express = require('express');
 const { ObjectId } = require('mongodb');
 const { conectar } = require('./db');
-const { exigirSesion, exigirRol } = require('./auth');
+const { exigirSesion, exigirRoles } = require('./auth');
 
 const router = express.Router();
-const soloCuidador = [exigirSesion, exigirRol('cuidador')];
+const gestores = [exigirSesion, exigirRoles('cuidador', 'doctor')];
 
 const TIPOS = ['medicamento', 'cita', 'fecha_especial'];
 const REPETICIONES = ['unica', 'diaria', 'semanal'];
 const HORA = /^([01][0-9]|2[0-3]):[0-5][0-9]$/;
 
-async function idsDePacientes(db, cuidadorId) {
-  const cuidador = await db.collection('usuarios').findOne({ _id: new ObjectId(cuidadorId) });
-  return (cuidador && cuidador.pacientesIds) || [];
+// Qué tipos de recordatorio puede crear o modificar cada rol
+const TIPOS_POR_ROL = {
+  cuidador: ['medicamento', 'cita', 'fecha_especial'],
+  doctor: ['medicamento']
+};
+
+function puedeGestionar(rol, tipo) {
+  return (TIPOS_POR_ROL[rol] || []).includes(tipo);
 }
 
-router.get('/pacientes', soloCuidador, async (req, res) => {
+async function idsDePacientes(db, usuarioId) {
+  const usuario = await db.collection('usuarios').findOne({ _id: new ObjectId(usuarioId) });
+  return (usuario && usuario.pacientesIds) || [];
+}
+
+router.get('/pacientes', gestores, async (req, res) => {
   try {
     const db = await conectar();
     const ids = await idsDePacientes(db, req.usuario.id);
@@ -24,11 +34,12 @@ router.get('/pacientes', soloCuidador, async (req, res) => {
       .toArray();
     res.json(pacientes);
   } catch (err) {
+    console.error('Error al listar pacientes:', err.message);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
-router.post('/recordatorios', soloCuidador, async (req, res) => {
+router.post('/recordatorios', gestores, async (req, res) => {
   const { pacienteId, tipo, mensaje, horarios, repeticion, detalle, diasSemana } = req.body || {};
 
   if (!ObjectId.isValid(pacienteId)) {
@@ -36,6 +47,9 @@ router.post('/recordatorios', soloCuidador, async (req, res) => {
   }
   if (!TIPOS.includes(tipo)) {
     return res.status(400).json({ error: 'Tipo inválido. Usa: ' + TIPOS.join(', ') });
+  }
+  if (!puedeGestionar(req.usuario.rol, tipo)) {
+    return res.status(403).json({ error: 'Tu tipo de usuario no puede crear recordatorios de tipo ' + tipo });
   }
   if (typeof mensaje !== 'string' || mensaje.trim().length < 5) {
     return res.status(400).json({ error: 'El mensaje debe tener al menos 5 caracteres' });
@@ -70,6 +84,7 @@ router.post('/recordatorios', soloCuidador, async (req, res) => {
     const resultado = await db.collection('recordatorios').insertOne(documento);
     res.status(201).json({ _id: resultado.insertedId, ...documento });
   } catch (err) {
+    console.error('Error al crear recordatorio:', err.message);
     if (err.code === 121) {
       return res.status(400).json({ error: 'Los datos no cumplen las reglas de validación' });
     }
@@ -77,7 +92,7 @@ router.post('/recordatorios', soloCuidador, async (req, res) => {
   }
 });
 
-router.get('/recordatorios', soloCuidador, async (req, res) => {
+router.get('/recordatorios', gestores, async (req, res) => {
   try {
     const db = await conectar();
     const permitidos = await idsDePacientes(db, req.usuario.id);
@@ -101,6 +116,32 @@ router.get('/recordatorios', soloCuidador, async (req, res) => {
       .toArray();
     res.json(lista);
   } catch (err) {
+    console.error('Error al listar recordatorios:', err.message);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+router.get('/pacientes/:id/historial', gestores, async (req, res) => {
+  const { id } = req.params;
+  if (!ObjectId.isValid(id)) {
+    return res.status(400).json({ error: 'Identificador inválido' });
+  }
+  const limite = Math.min(Math.max(parseInt(req.query.limite, 10) || 20, 1), 100);
+
+  try {
+    const db = await conectar();
+    const permitidos = await idsDePacientes(db, req.usuario.id);
+    if (!permitidos.some(p => p.toString() === id)) {
+      return res.status(403).json({ error: 'Ese paciente no está a tu cargo' });
+    }
+    const registros = await db.collection('registros')
+      .find({ pacienteId: new ObjectId(id) })
+      .sort({ fechaProgramada: -1 })
+      .limit(limite)
+      .toArray();
+    res.json(registros);
+  } catch (err) {
+    console.error('Error al consultar el historial:', err.message);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
@@ -117,18 +158,24 @@ async function obtenerPropio(db, req, id) {
   if (!permitidos.some(p => p.toString() === recordatorio.pacienteId.toString())) {
     return { status: 403, error: 'Ese recordatorio no pertenece a un paciente a tu cargo' };
   }
+  if (!puedeGestionar(req.usuario.rol, recordatorio.tipo)) {
+    return { status: 403, error: 'Tu tipo de usuario no puede modificar recordatorios de tipo ' + recordatorio.tipo };
+  }
   if (!recordatorio.activo) {
     return { status: 409, error: 'El recordatorio está desactivado' };
   }
   return { recordatorio };
 }
 
-router.patch('/recordatorios/:id', soloCuidador, async (req, res) => {
+router.patch('/recordatorios/:id', gestores, async (req, res) => {
   const { tipo, mensaje, horarios, repeticion, detalle, diasSemana } = req.body || {};
   const cambios = {};
 
   if (tipo !== undefined) {
     if (!TIPOS.includes(tipo)) return res.status(400).json({ error: 'Tipo inválido. Usa: ' + TIPOS.join(', ') });
+    if (!puedeGestionar(req.usuario.rol, tipo)) {
+      return res.status(403).json({ error: 'Tu tipo de usuario no puede usar el tipo ' + tipo });
+    }
     cambios.tipo = tipo;
   }
   if (mensaje !== undefined) {
@@ -184,7 +231,7 @@ router.patch('/recordatorios/:id', soloCuidador, async (req, res) => {
   }
 });
 
-router.delete('/recordatorios/:id', soloCuidador, async (req, res) => {
+router.delete('/recordatorios/:id', gestores, async (req, res) => {
   try {
     const db = await conectar();
     const r = await obtenerPropio(db, req, req.params.id);
