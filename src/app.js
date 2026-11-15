@@ -122,6 +122,7 @@ app.get('/api/yo', exigirSesion, async (req, res) => {
 
 app.use('/api', require('./recordatorios'));
 app.use('/api', require('./paciente'));
+app.use('/api', require('./reportes'));
 
 app.use('/api', (req, res) => {
   res.status(404).json({ error: 'Ruta no encontrada' });

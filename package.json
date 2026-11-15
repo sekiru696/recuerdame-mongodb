@@ -12,7 +12,8 @@
     "setup": "node src/setup.js",
     "seed": "node src/seed.js",
     "explain": "node src/explain.js",
-    "desbloquear": "node src/desbloquear.js"
+    "desbloquear": "node src/desbloquear.js",
+    "explain-agregaciones": "node src/explain-agregaciones.js"
   },
   "repository": {
     "type": "git",

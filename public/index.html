@@ -298,6 +298,17 @@
   .paginacion .btn { min-height: 42px; }
   .paginacion .btn:disabled { opacity: .45; cursor: not-allowed; }
 
+  /* Reportes */
+  .reportes { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin-top: 1.5rem; }
+  .reportes .panel > p { margin-top: .3rem; color: var(--ink-soft); font-size: 1rem; }
+  .resultado { margin-top: 1rem !important; color: var(--ink) !important; font-size: 1.1rem !important; font-weight: 700; }
+  .barras { margin-top: 1rem; display: grid; gap: 1rem; }
+  .barra-etiqueta { display: block; font-weight: 700; }
+  .barra-pista { height: 18px; margin-top: .3rem; overflow: hidden; background: var(--line); border-radius: 9px; }
+  .barra-relleno { height: 100%; min-width: 2px; border-radius: 9px; background: var(--ok); }
+  .barra-relleno.alerta { background: var(--brand); }
+  .barra-valor { display: block; margin-top: .25rem; color: var(--ink-soft); font-size: .98rem; }
+
   /* Perfil */
   .perfil { margin-top: 1.5rem; max-width: 560px; }
   .perfil div { display: grid; grid-template-columns: 11rem 1fr; gap: 1rem; padding: .9rem 0; border-top: 1px solid var(--line); }
@@ -387,6 +398,7 @@
     .app.lateral-abierto .lateral { transform: none; }
     .app.lateral-abierto .velo { display: block; position: fixed; inset: 0; z-index: 20; background: rgba(58, 42, 36, .5); }
     .inicio-grid { grid-template-columns: 1fr; }
+    .reportes { grid-template-columns: 1fr; }
   }
 
   @media (max-width: 760px) {
@@ -471,6 +483,10 @@
         <button class="menu-item" type="button" data-vista="historial" data-roles="cuidador doctor" hidden>
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
           Historial
+        </button>
+        <button class="menu-item" type="button" data-vista="reportes" data-roles="cuidador doctor" hidden>
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+          Reportes
         </button>
         <button class="menu-item" type="button" data-vista="perfil" data-roles="cuidador doctor paciente" hidden>
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
@@ -571,6 +587,25 @@
             <thead><tr><th scope="col">Fecha y hora</th><th scope="col">Aviso</th><th scope="col">Estado</th></tr></thead>
             <tbody id="historial"></tbody>
           </table>
+        </div>
+      </section>
+
+      <!-- Reportes -->
+      <section class="vista" id="vista-reportes" aria-labelledby="tituloReportes" hidden>
+        <h1 id="tituloReportes" tabindex="-1">Reportes</h1>
+        <div class="reportes">
+          <div class="panel">
+            <h2>Cumplimiento por semana</h2>
+            <p>Porcentaje de avisos confirmados en las últimas 4 semanas.</p>
+            <div class="barras" id="repCumplimiento"></div>
+            <p class="resultado" id="resCumplimiento"></p>
+          </div>
+          <div class="panel">
+            <h2>Avisos no atendidos por franja</h2>
+            <p>Porcentaje de avisos sin atender en los últimos 28 días, según la hora del día.</p>
+            <div class="barras" id="repFranjas"></div>
+            <p class="resultado" id="resFranjas"></p>
+          </div>
         </div>
       </section>
 
@@ -759,6 +794,7 @@ function irA(vista, enfocar) {
   if (vista === 'perfil') cargarPerfil();
   if (vista === 'midia') cargarMiDia();
   if (vista === 'historial') cargarHistorial();
+  if (vista === 'reportes') cargarReportes();
   if (enfocar) {
     const titulo = document.querySelector('#vista-' + vista + ' h1');
     if (titulo) titulo.focus();
@@ -1145,6 +1181,108 @@ async function cargarHistorial() {
   }
 }
 
+/* ---------- Reportes (agregaciones) ---------- */
+const ETIQUETA_FRANJA = { manana: 'Mañana', tarde: 'Tarde', noche: 'Noche' };
+const ORDEN_FRANJAS = ['manana', 'tarde', 'noche'];
+
+function porcentajeTexto(n) {
+  return n.toLocaleString('es-CL', { maximumFractionDigits: 1 }) + ' %';
+}
+
+function crearBarra(etiqueta, porcentaje, detalle, alerta) {
+  const fila = document.createElement('div');
+
+  const nombre = document.createElement('span');
+  nombre.className = 'barra-etiqueta';
+  nombre.textContent = etiqueta;
+
+  const pista = document.createElement('div');
+  pista.className = 'barra-pista';
+  pista.setAttribute('role', 'progressbar');
+  pista.setAttribute('aria-label', etiqueta);
+  pista.setAttribute('aria-valuemin', '0');
+  pista.setAttribute('aria-valuemax', '100');
+  pista.setAttribute('aria-valuenow', String(porcentaje));
+  const relleno = document.createElement('div');
+  relleno.className = 'barra-relleno' + (alerta ? ' alerta' : '');
+  relleno.style.width = Math.max(0, Math.min(100, porcentaje)) + '%';
+  pista.append(relleno);
+
+  const valor = document.createElement('span');
+  valor.className = 'barra-valor';
+  valor.textContent = detalle;
+
+  fila.append(nombre, pista, valor);
+  return fila;
+}
+
+function pintarCumplimiento(semanas) {
+  const cont = $('repCumplimiento');
+  cont.textContent = '';
+  if (semanas.length === 0) {
+    $('resCumplimiento').textContent = 'Todavía no hay registros en las últimas 4 semanas.';
+    return;
+  }
+  let total = 0;
+  let confirmados = 0;
+  for (const s of semanas) {
+    total += s.total;
+    confirmados += s.confirmados;
+    const inicio = new Date(s.semana).toLocaleDateString('es-CL', { day: 'numeric', month: 'short' });
+    cont.append(crearBarra('Semana del ' + inicio, s.porcentaje,
+      porcentajeTexto(s.porcentaje) + ' (' + s.confirmados + ' de ' + s.total + ' avisos)', false));
+  }
+  $('resCumplimiento').textContent = 'Cumplimiento total: ' + porcentajeTexto(confirmados / total * 100) +
+    ' (' + confirmados + ' de ' + total + ' avisos).';
+}
+
+function pintarFranjas(franjas) {
+  const cont = $('repFranjas');
+  cont.textContent = '';
+  if (franjas.length === 0) {
+    $('resFranjas').textContent = 'Todavía no hay registros en los últimos 28 días.';
+    return;
+  }
+  const porFranja = Object.fromEntries(franjas.map(f => [f.franja, f]));
+  for (const clave of ORDEN_FRANJAS) {
+    const f = porFranja[clave] || { total: 0, noAtendidos: 0, porcentajeNoAtendidos: 0 };
+    cont.append(crearBarra(ETIQUETA_FRANJA[clave], f.porcentajeNoAtendidos,
+      f.noAtendidos + ' sin atender de ' + f.total + ' avisos (' + porcentajeTexto(f.porcentajeNoAtendidos) + ')', true));
+  }
+  const peor = franjas[0];
+  $('resFranjas').textContent = peor.noAtendidos === 0
+    ? 'No hubo avisos sin atender en los últimos 28 días.'
+    : 'La franja con más avisos sin atender es la ' + ETIQUETA_FRANJA[peor.franja].toLowerCase() +
+      ' (' + peor.noAtendidos + ' de ' + peor.total + ').';
+}
+
+async function cargarReportes() {
+  const id = $('paciente').value;
+  $('repCumplimiento').textContent = '';
+  $('repFranjas').textContent = '';
+  $('resCumplimiento').textContent = '';
+  $('resFranjas').textContent = '';
+  if (!id) {
+    $('resCumplimiento').textContent = 'No tienes pacientes a tu cargo todavía.';
+    return;
+  }
+  $('resCumplimiento').textContent = 'Cargando…';
+  $('resFranjas').textContent = 'Cargando…';
+  try {
+    const base = '/pacientes/' + encodeURIComponent(id);
+    const [cumplimiento, franjas] = await Promise.all([
+      api(base + '/cumplimiento?semanas=4'),
+      api(base + '/franjas?dias=28')
+    ]);
+    pintarCumplimiento(cumplimiento);
+    pintarFranjas(franjas);
+  } catch (err) {
+    $('resCumplimiento').textContent = '';
+    $('resFranjas').textContent = '';
+    aviso(err.message, true);
+  }
+}
+
 function prepararMenu() {
   for (const item of document.querySelectorAll('.menu-item[data-vista]')) {
     item.hidden = !(item.dataset.roles || '').split(' ').includes(usuario.rol);
@@ -1215,6 +1353,7 @@ $('paciente').addEventListener('change', async () => {
   actualizarTitulo();
   await cargarTodo();
   if (vistaActual === 'historial') cargarHistorial();
+  if (vistaActual === 'reportes') cargarReportes();
 });
 
 $('filtros').addEventListener('click', e => {
