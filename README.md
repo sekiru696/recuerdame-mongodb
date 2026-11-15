@@ -71,11 +71,20 @@ Todos usan la contraseña `clave-de-prueba`.
 
 | Tipo | Funciones |
 |---|---|
-| Cuidador | Crear, filtrar, editar y desactivar recordatorios de todos los tipos de sus pacientes. Ver el historial de cumplimiento |
-| Doctor | Ver los recordatorios y el historial de sus pacientes. Crear, editar y desactivar solo medicamentos |
+| Cuidador | Crear, filtrar, ordenar, paginar, editar y desactivar recordatorios de todos los tipos de sus pacientes. Ver el historial y los reportes |
+| Doctor | Ver los recordatorios, el historial y los reportes de sus pacientes. Crear, editar y desactivar solo medicamentos |
 | Paciente | Ver sus avisos de hoy, escucharlos y confirmarlos con el botón "Ya lo hice" |
 
 La baja de un recordatorio es lógica (`activo: false`) para conservar el historial.
+
+## Reportes (agregaciones)
+
+La pantalla Reportes, disponible para el cuidador y el doctor, muestra dos agregaciones de MongoDB:
+
+1. **Cumplimiento por semana:** porcentaje de avisos confirmados en las últimas 4 semanas.
+2. **Avisos no atendidos por franja horaria:** en qué momento del día se atienden menos los avisos.
+
+El detalle de cada pipeline está en `docs/semana6/agregaciones.md`.
 
 ## Seguridad
 
@@ -88,10 +97,19 @@ La baja de un recordatorio es lógica (`activo: false`) para conservar el histor
 
 ## Índices
 
-Los dos índices y su evidencia con `explain` están en `docs/semana5/indices.md`. Para repetir la medición:
+Hay dos índices propios además del índice único del correo. Su justificación y la evidencia con `explain` están en `docs/semana5/indices.md`. Para repetir la medición:
 
 ```
 npm run explain
+npm run explain-agregaciones
+```
+
+Para medir con muchos datos (60.000 registros de pacientes ficticios) y luego limpiarlos:
+
+```
+npm run carga-masiva
+npm run explain
+npm run carga-masiva -- --limpiar
 ```
 
 ## Scripts
@@ -101,32 +119,40 @@ npm run explain
 | `npm start` | Enciende el servidor |
 | `npm run setup` | Crea colecciones, validaciones e índices |
 | `npm run seed` | Carga los datos de ejemplo |
-| `npm run explain` | Compara las consultas con y sin índice |
+| `npm run explain` | Compara las consultas de lista e historial con y sin índice |
+| `npm run explain-agregaciones` | Compara las dos agregaciones con y sin índice |
+| `npm run carga-masiva` | Inserta registros de pacientes ficticios (con `-- --limpiar` los elimina) |
 | `npm run desbloquear -- correo` | Desbloquea una cuenta bloqueada |
 
-## Documentación por semana
+## Documentación
 
 - `docs/semana1/`: ficha del proyecto y comparación relacional frente a documental
-- `docs/semana2/`: historias de usuario, modelo y decisión de incrustar o referenciar
-- `docs/semana3/`: modelo versión 2, diccionario de campos y evidencia
+- `docs/semana2/`: historias de usuario, primer modelo y decisión de incrustar o referenciar
+- `docs/semana3/`: modelo versión 2 y evidencia
 - `docs/semana4/`: plan y bitácora del primer hito
 - `docs/semana5/`: índices con evidencia y bitácora
+- `docs/semana6/`: agregaciones y bitácora
+- `docs/semana7/modelo-final.md`: diagrama, diccionario de campos y decisiones del modelo final
 
 ## Estructura
 
 ```
 src/
-  app.js            servidor, seguridad y sesión
-  auth.js           token y control de acceso por tipo de usuario
-  recordatorios.js  rutas del cuidador y del doctor
-  paciente.js       rutas del paciente (avisos de hoy y confirmación)
-  db.js             conexión a MongoDB
-  setup.js          colecciones, validaciones e índices
-  seed.js           datos de ejemplo
-  explain.js        comparación de consultas con y sin índice
+  app.js                    servidor, seguridad y sesión
+  auth.js                   token y control de acceso por tipo de usuario
+  recordatorios.js          rutas del cuidador y del doctor
+  paciente.js               rutas del paciente (avisos de hoy y confirmación)
+  reportes.js               rutas de las agregaciones
+  agregaciones.js           pipelines de las dos agregaciones
+  db.js                     conexión a MongoDB
+  setup.js                  colecciones, validaciones e índices
+  seed.js                   datos de ejemplo
+  explain.js                comparación de consultas con y sin índice
+  explain-agregaciones.js   comparación de las agregaciones con y sin índice
+  carga-masiva.js           datos de prueba en volumen
 public/
-  index.html        interfaz
-docs/               documentación por semana
+  index.html                interfaz
+docs/                       documentación por semana
 ```
 
 ## Problemas frecuentes

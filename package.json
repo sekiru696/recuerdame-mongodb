@@ -13,7 +13,8 @@
     "seed": "node src/seed.js",
     "explain": "node src/explain.js",
     "desbloquear": "node src/desbloquear.js",
-    "explain-agregaciones": "node src/explain-agregaciones.js"
+    "explain-agregaciones": "node src/explain-agregaciones.js",
+    "carga-masiva": "node src/carga-masiva.js"
   },
   "repository": {
     "type": "git",
