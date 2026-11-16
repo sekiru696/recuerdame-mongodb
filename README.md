@@ -54,6 +54,16 @@ npm start
 
 Abrir http://localhost:3000
 
+## Pruebas
+
+```
+npm test
+```
+
+Ejecuta las pruebas automáticas de los dos flujos, los permisos, la paginación, las agregaciones, la validación de MongoDB y los casos límite. Las pruebas encienden su propio servidor en un puerto libre, así que no hace falta ejecutar `npm start` antes. Necesitan el `.env` configurado y los datos de ejemplo cargados (`npm run setup` y `npm run seed`).
+
+La última prueba bloquea la cuenta `cuidador2@ejemplo.cl` y al terminar la deja desbloqueada.
+
 ## Usuarios de ejemplo
 
 Todos usan la contraseña `clave-de-prueba`.
@@ -117,12 +127,15 @@ npm run carga-masiva -- --limpiar
 | Comando | Qué hace |
 |---|---|
 | `npm start` | Enciende el servidor |
+| `npm test` | Ejecuta las pruebas automáticas (encienden su propio servidor) |
 | `npm run setup` | Crea colecciones, validaciones e índices |
 | `npm run seed` | Carga los datos de ejemplo |
 | `npm run explain` | Compara las consultas de lista e historial con y sin índice |
 | `npm run explain-agregaciones` | Compara las dos agregaciones con y sin índice |
 | `npm run carga-masiva` | Inserta registros de pacientes ficticios (con `-- --limpiar` los elimina) |
 | `npm run desbloquear -- correo` | Desbloquea una cuenta bloqueada |
+| `node probar-conexion.js` | Comprueba que la conexión a Atlas funciona |
+| `node src/casos-limite.js` | Muestra dos casos límite rechazados por MongoDB (horario inválido y correo duplicado) |
 
 ## Documentación
 
@@ -132,7 +145,8 @@ npm run carga-masiva -- --limpiar
 - `docs/semana4/`: plan y bitácora del primer hito
 - `docs/semana5/`: índices con evidencia y bitácora
 - `docs/semana6/`: agregaciones y bitácora
-- `docs/semana7/modelo-final.md`: diagrama, diccionario de campos y decisiones del modelo final
+- `docs/semana7/`: modelo final (diagrama, diccionario de campos y decisiones), análisis de rendimiento, resultados de pruebas y bitácora
+- `docs/semana8/`: ensayo de instalación desde cero, guion de la defensa, defectos conocidos y límites, y bitácora
 
 ## Estructura
 
@@ -150,6 +164,10 @@ src/
   explain.js                comparación de consultas con y sin índice
   explain-agregaciones.js   comparación de las agregaciones con y sin índice
   carga-masiva.js           datos de prueba en volumen
+  casos-limite.js           dos casos límite rechazados por la base de datos
+  desbloquear.js            desbloquea una cuenta bloqueada
+tests/
+  flujos.test.js            pruebas automáticas de los flujos
 public/
   index.html                interfaz
 docs/                       documentación por semana
