@@ -1,0 +1,78 @@
+﻿
+> recuerdame-mongodb@1.0.0 test
+> node --test --test-reporter=spec tests/flujos.test.js
+
+◇ injected env (2) from .env
+▶ Recuérdame
+  ▶ 1. Servidor y seguridad básica
+    [32m✔ la base de datos responde [90m(204.1496ms)[39m[39m
+    [32m✔ la página principal carga [90m(42.2012ms)[39m[39m
+    [32m✔ envía cabeceras de seguridad y oculta X-Powered-By [90m(163.4204ms)[39m[39m
+    [32m✔ responde 404 en JSON a una ruta inexistente [90m(7.8658ms)[39m[39m
+    [32m✔ rechaza un JSON mal formado con 400 [90m(4.6062ms)[39m[39m
+  [32m✔ 1. Servidor y seguridad básica [90m(423.8571ms)[39m[39m
+  ▶ 2. Autenticación
+    [32m✔ el cuidador, el doctor y el paciente inician sesión con su tipo de usuario [90m(812.1423ms)[39m[39m
+    [32m✔ rechaza un intento de inyección NoSQL en el login [90m(4.2995ms)[39m[39m
+    [32m✔ rechaza las rutas protegidas sin token [90m(2.4888ms)[39m[39m
+    [32m✔ rechaza un token adulterado [90m(4.7204ms)[39m[39m
+    [32m✔ /api/yo devuelve los datos del usuario con sesión [90m(92.3415ms)[39m[39m
+  [32m✔ 2. Autenticación [90m(916.9405ms)[39m[39m
+  ▶ 3. Permisos por tipo de usuario
+    [32m✔ el paciente no puede usar las rutas del cuidador [90m(5.0118ms)[39m[39m
+    [32m✔ el cuidador no puede usar las rutas del paciente [90m(2.2306ms)[39m[39m
+    [32m✔ un cuidador no puede ver los recordatorios de un paciente ajeno [90m(187.631ms)[39m[39m
+    [32m✔ el doctor puede crear medicamentos pero no citas [90m(920.1366ms)[39m[39m
+    [32m✔ el doctor no puede editar una cita [90m(614.1834ms)[39m[39m
+  [32m✔ 3. Permisos por tipo de usuario [90m(1729.8835ms)[39m[39m
+  ▶ 4. Flujo 1: el cuidador gestiona recordatorios
+    [32m✔ crea una cita con sus datos propios (lugar y profesional) [90m(206.2847ms)[39m[39m
+    [32m✔ la lista incluye el recordatorio creado y el filtro por tipo funciona [90m(510.0067ms)[39m[39m
+    [32m✔ rechaza un tipo inválido en el filtro [90m(204.3803ms)[39m[39m
+    [32m✔ rechaza un horario inválido al crear [90m(3.5141ms)[39m[39m
+    [32m✔ rechaza un mensaje demasiado corto [90m(3.2453ms)[39m[39m
+    [32m✔ edita el mensaje y el horario, y guarda la fecha de edición [90m(507.8308ms)[39m[39m
+    [32m✔ rechaza una edición con horario inválido y con identificador inválido [90m(5.7711ms)[39m[39m
+    [32m✔ desactiva el recordatorio (baja lógica) y ya no aparece en la lista [90m(606.1614ms)[39m[39m
+    [32m✔ no permite editar un recordatorio desactivado [90m(205.0464ms)[39m[39m
+  [32m✔ 4. Flujo 1: el cuidador gestiona recordatorios [90m(2253.2035ms)[39m[39m
+  ▶ 5. Paginación y orden
+    [32m✔ devuelve la página pedida con el total y el número de páginas [90m(306.181ms)[39m[39m
+    [32m✔ la página 2 trae recordatorios distintos a los de la página 1 [90m(615.6428ms)[39m[39m
+    [32m✔ una página fuera de rango queda en la última [90m(408.3302ms)[39m[39m
+    [32m✔ rechaza una página inválida y un orden inválido [90m(205.0108ms)[39m[39m
+    [32m✔ limita el tamaño de página a 50 [90m(306.3834ms)[39m[39m
+    [32m✔ el orden por hora entrega los avisos de la hora más temprana a la más tardía [90m(308.1898ms)[39m[39m
+  [32m✔ 5. Paginación y orden [90m(2150.4462ms)[39m[39m
+  ▶ 6. Flujo 2: el paciente confirma y el historial lo refleja
+    [32m✔ el paciente ve sus avisos de hoy ordenados por hora [90m(407.7737ms)[39m[39m
+    [32m✔ confirma un aviso, queda confirmado y confirmar de nuevo no duplica [90m(1230.1931ms)[39m[39m
+    [32m✔ rechaza una hora que no pertenece al recordatorio y una hora mal escrita [90m(615.3844ms)[39m[39m
+    [32m✔ un paciente no puede confirmar el recordatorio de otro paciente [90m(100.3925ms)[39m[39m
+    [32m✔ el doctor ve el historial más reciente primero, incluida la confirmación de hoy [90m(206.4434ms)[39m[39m
+    [32m✔ el historial rechaza a un cuidador ajeno y a un paciente [90m(102.8046ms)[39m[39m
+  [32m✔ 6. Flujo 2: el paciente confirma y el historial lo refleja [90m(2663.745ms)[39m[39m
+  ▶ 7. Agregaciones
+    [32m✔ el cumplimiento semanal devuelve porcentajes coherentes [90m(204.025ms)[39m[39m
+    [32m✔ los no atendidos por franja vienen ordenados de la peor franja a la mejor [90m(203.4859ms)[39m[39m
+    [32m✔ valida los parámetros de las agregaciones [90m(5.9653ms)[39m[39m
+    [32m✔ los reportes rechazan al paciente y a un cuidador ajeno [90m(198.5748ms)[39m[39m
+  [32m✔ 7. Agregaciones [90m(612.562ms)[39m[39m
+  ▶ 8. Validación en la base de datos
+    [32m✔ MongoDB rechaza un recordatorio con horario inválido (esquema $jsonSchema) [90m(1842.6947ms)[39m[39m
+    [32m✔ MongoDB rechaza una edición con un tipo fuera de la lista [90m(204.7708ms)[39m[39m
+    [32m✔ el índice único impide dos usuarios con el mismo correo [90m(203.5694ms)[39m[39m
+    [32m✔ las contraseñas se guardan cifradas [90m(103.0317ms)[39m[39m
+  [32m✔ 8. Validación en la base de datos [90m(2354.5982ms)[39m[39m
+  ▶ 9. Bloqueo de cuenta (se ejecuta al final)
+    [32m✔ tras 5 contraseñas incorrectas la cuenta se bloquea, aun con la clave correcta [90m(1945.4347ms)[39m[39m
+  [32m✔ 9. Bloqueo de cuenta (se ejecuta al final) [90m(1945.7885ms)[39m[39m
+[32m✔ Recuérdame [90m(18651.6394ms)[39m[39m
+[34mℹ tests 45[39m
+[34mℹ suites 10[39m
+[34mℹ pass 45[39m
+[34mℹ fail 0[39m
+[34mℹ cancelled 0[39m
+[34mℹ skipped 0[39m
+[34mℹ todo 0[39m
+[34mℹ duration_ms 19131.5032[39m

@@ -1,6 +1,6 @@
 # Resultados de las pruebas (Semana 7)
 
-Las pruebas están en `tests/flujos.test.js` y se ejecutan con `npm test`, con el servidor encendido y los datos de ejemplo cargados. Usan el ejecutor de pruebas incluido en Node.js y hacen llamadas reales a la API y a MongoDB Atlas.
+Las pruebas están en `tests/flujos.test.js` y se ejecutan con `npm test`, con los datos de ejemplo cargados. Desde la semana 8 las pruebas encienden su propio servidor, así que no hace falta `npm start`. Usan el ejecutor de pruebas incluido en Node.js y hacen llamadas reales a la API y a MongoDB Atlas.
 
 La salida completa está en `docs/semana7/resultados-pruebas.txt`.
 
@@ -35,4 +35,4 @@ La salida completa está en `docs/semana7/resultados-pruebas.txt`.
 
 ## Defectos encontrados
 
-Ninguno en la corrida final. Las dos fallas anteriores de la ejecución no eran del código: la primera ocurrió porque el servidor no estaba encendido (45 pruebas canceladas por `ECONNREFUSED`), y la segunda mostraba las tildes mal por la codificación de la terminal. Se resolvieron encendiendo el servidor y fijando la codificación UTF-8.
+Ninguno en la corrida final. Las dos fallas anteriores de la ejecución no eran del código: la primera ocurrió porque el servidor no estaba encendido (45 pruebas canceladas por `ECONNREFUSED`), y la segunda mostraba las tildes mal por la codificación de la terminal. Se resolvieron fijando la codificación UTF-8 y, en la semana 8, haciendo que las pruebas enciendan su propio servidor.
