@@ -139,7 +139,13 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Error interno del servidor' });
 });
 
-const PUERTO = process.env.PORT || 3000;
-app.listen(PUERTO, () => {
-  console.log(`Servidor listo en http://localhost:${PUERTO}`);
-});
+// Solo enciende el servidor si se ejecuta directamente (npm start).
+// Si otro archivo lo importa (por ejemplo las pruebas), no abre el puerto por su cuenta.
+if (require.main === module) {
+  const PUERTO = process.env.PORT || 3000;
+  app.listen(PUERTO, () => {
+    console.log(`Servidor listo en http://localhost:${PUERTO}`);
+  });
+}
+
+module.exports = app;

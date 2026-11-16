@@ -1,12 +1,17 @@
 // Pruebas de todos los flujos de Recuérdame.
-// Requisitos: servidor encendido (npm start) y datos de ejemplo cargados (npm run seed).
+// Requisitos: archivo .env configurado y datos de ejemplo cargados (npm run setup y npm run seed).
 // Ejecutar desde la carpeta del proyecto con: npm test
+// Las pruebas encienden su propio servidor en un puerto libre, no hace falta ejecutar npm start.
+// Para probar un servidor que ya esté encendido, define BASE_URL (por ejemplo http://127.0.0.1:3000).
 
 const { describe, it, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { conectar, cerrar } = require('../src/db');
 
-const BASE = process.env.BASE_URL || 'http://127.0.0.1:3000';
+const app = require('../src/app');
+
+let BASE = process.env.BASE_URL || null;
+let servidor = null;
 const CLAVE = 'clave-de-prueba';
 
 async function llamar(ruta, { metodo = 'GET', token, cuerpo, crudo } = {}) {
@@ -35,6 +40,14 @@ describe('Recuérdame', () => {
   const id = {};     // identificadores útiles
 
   before(async () => {
+    if (!BASE) {
+      servidor = await new Promise((resolver, rechazar) => {
+        const s = app.listen(0, '127.0.0.1', () => resolver(s));
+        s.on('error', rechazar);
+      });
+      BASE = 'http://127.0.0.1:' + servidor.address().port;
+    }
+
     t.cuidador = await iniciarSesion('cuidador@ejemplo.cl');
     t.cuidador2 = await iniciarSesion('cuidador2@ejemplo.cl');
     t.doctor = await iniciarSesion('doctor@ejemplo.cl');
@@ -51,6 +64,7 @@ describe('Recuérdame', () => {
   });
 
   after(async () => {
+    if (servidor) await new Promise(resolver => servidor.close(resolver));
     // Deja la cuenta usada en la prueba de bloqueo como estaba
     const db = await conectar();
     await db.collection('usuarios').updateOne(
