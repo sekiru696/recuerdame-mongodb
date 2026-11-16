@@ -136,6 +136,7 @@ npm run carga-masiva -- --limpiar
 | `npm run desbloquear -- correo` | Desbloquea una cuenta bloqueada |
 | `node probar-conexion.js` | Comprueba que la conexión a Atlas funciona |
 | `node src/casos-limite.js` | Muestra dos casos límite rechazados por MongoDB (horario inválido y correo duplicado) |
+| `node src/editar-ejemplo.js` | Edita un recordatorio con `$set` y muestra que MongoDB rechaza una edición con horario inválido |
 
 ## Documentación
 
